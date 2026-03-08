@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <%- include('../partials/head', { title: 'My Surveys' }) %>
+    <style>
+        .badge-institutional {
+            background: linear-gradient(135deg, #1d3e8b 0%, #2a4a9c 100%);
+            color: white;
+        }
+        .badge-departmental {
+            background: linear-gradient(135deg, #6b4f8c 0%, #7d5d9e 100%);
+            color: white;
+        }
+    </style>
+</head>
+<body class="bg-background-light dark:bg-background-dark font-display text-slate-900 dark:text-slate-100">
+    <!-- Mobile Menu Overlay -->
+    <div id="mobileMenuOverlay" class="fixed inset-0 bg-black/50 z-40 hidden lg:hidden transition-opacity"></div>
+
+    <div class="flex h-screen overflow-hidden">
+        <!-- Sidebar -->
+        <%- include('../partials/sidebar', { 
+            role: 'office-head', 
+            currentPage: 'my-surveys',
+            user: user 
+        }) %>
+
+        <!-- Main Content -->
+        <main class="flex-1 flex flex-col min-w-0 h-screen overflow-hidden bg-background-light dark:bg-background-dark">
+            <!-- Header -->
+            <%- include('../partials/header', { 
+                role: 'office-head', 
+                pageTitle: 'My Surveys',
+                user: user 
+            }) %>
+
+            <!-- Scrollable Content Area -->
+            <div class="flex-1 overflow-y-auto custom-scrollbar">
+                <div class="max-w-6xl mx-auto px-4 lg:px-6 py-6 lg:py-8">
+                    <!-- Header Section with Filter -->
+                    <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-6 lg:mb-8">
+                        <div>
+                            <h2 class="text-2xl lg:text-3xl font-black text-slate-900 dark:text-white tracking-tight">Office Head Surveys</h2>
+                            <p class="text-sm lg:text-base text-slate-500 dark:text-slate-400 mt-1">Manage and complete your assigned institutional assessments.</p>
+                        </div>
+                    </div>
+
+                    <!-- Survey Type Info Cards -->
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 lg:gap-6 mb-6 lg:mb-8">
+                        <div class="bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-900/10 dark:to-indigo-900/10 border border-blue-200 dark:border-blue-800/30 rounded-xl p-4 lg:p-5">
+                            <div class="flex items-start gap-3">
+                                <div class="size-8 lg:size-10 rounded-lg bg-gradient-to-br from-primary to-blue-700 text-white flex items-center justify-center flex-shrink-0">
+                                    <span class="material-symbols-outlined text-lg lg:text-xl">account_balance</span>
+                                </div>
+                                <div>
+                                    <h3 class="font-bold text-sm lg:text-base text-primary">Institutional-Wide Surveys</h3>
+                                    <p class="text-xs lg:text-sm text-slate-600 dark:text-slate-400 mt-1">Mandatory assessments for all department heads across the institution.</p>
+                                    <div class="flex items-center gap-3 mt-2">
+                                        <span class="inline-block text-[10px] lg:text-xs font-bold bg-primary/10 text-primary px-2 py-1 rounded">2 Active</span>
+                                        <span class="text-[10px] lg:text-xs text-slate-500">16 offices required</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="bg-gradient-to-br from-purple-50 to-violet-50 dark:from-purple-900/10 dark:to-violet-900/10 border border-purple-200 dark:border-purple-800/30 rounded-xl p-4 lg:p-5">
+                            <div class="flex items-start gap-3">
+                                <div class="size-8 lg:size-10 rounded-lg bg-gradient-to-br from-purple-600 to-purple-700 text-white flex items-center justify-center flex-shrink-0">
+                                    <span class="material-symbols-outlined text-lg lg:text-xl">domain</span>
+                                </div>
+                                <div>
+                                    <h3 class="font-bold text-sm lg:text-base text-purple-700 dark:text-purple-400">Department-Specific Surveys</h3>
+                                    <p class="text-xs lg:text-sm text-slate-600 dark:text-slate-400 mt-1">Targeted assessments for your specific office or department only.</p>
+                                    <div class="flex items-center gap-3 mt-2">
+                                        <span class="inline-block text-[10px] lg:text-xs font-bold bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400 px-2 py-1 rounded">1 Active</span>
+                                        <span class="text-[10px] lg:text-xs text-slate-500">Your office only</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Tabs with filter highlighting -->
+                    <div class="border-b border-slate-200 dark:border-slate-800 mb-6 lg:mb-8 overflow-x-auto custom-scrollbar">
+                        <div class="flex gap-4 lg:gap-8 min-w-max">
+                            <a href="/office-head/my-surveys?filter=all" class="pb-3 lg:pb-4 text-xs lg:text-sm font-medium <%= filter === 'all' ? 'text-primary border-b-2 border-primary font-bold' : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200' %> whitespace-nowrap">All Surveys</a>
+                            <a href="/office-head/my-surveys?filter=active" class="pb-3 lg:pb-4 text-xs lg:text-sm font-medium <%= filter === 'active' ? 'text-primary border-b-2 border-primary font-bold' : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200' %> whitespace-nowrap">Active (3)</a>
+                            <a href="/office-head/my-surveys?filter=completed" class="pb-3 lg:pb-4 text-xs lg:text-sm font-medium <%= filter === 'completed' ? 'text-primary border-b-2 border-primary font-bold' : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200' %> whitespace-nowrap">Completed</a>
+                            <a href="/office-head/my-surveys?filter=drafts" class="pb-3 lg:pb-4 text-xs lg:text-sm font-medium <%= filter === 'drafts' ? 'text-primary border-b-2 border-primary font-bold' : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200' %> whitespace-nowrap">Drafts</a>
+                        </div>
+                    </div>
+
+                    <!-- Survey List -->
+                    <div class="grid gap-4 lg:gap-6">
+                        <!-- Survey Card 1 - Institutional-Wide Survey (Completed for user, still active overall) -->
+                        <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-shadow">
+                            <div class="p-4 lg:p-6">
+                                <div class="flex flex-col lg:flex-row lg:items-start justify-between gap-4">
+                                    <div class="flex-1">
+                                        <div class="flex flex-wrap items-center gap-2 lg:gap-3 mb-3">
+                                            <span class="px-2.5 py-1 badge-institutional text-[10px] lg:text-xs font-bold uppercase tracking-wider rounded flex items-center gap-1">
+                                                <span class="material-symbols-outlined text-xs">account_balance</span>
+                                                Institutional-Wide
+                                            </span>
+                                            <span class="px-2.5 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 text-[10px] font-bold uppercase tracking-wider rounded">High Priority</span>
+                                            <span class="text-[10px] lg:text-xs text-slate-500 ml-auto">Due: Oct 30, 2024</span>
+                                        </div>
+                                        
+                                        <h3 class="text-lg lg:text-xl font-bold text-slate-900 dark:text-white leading-tight mb-2">Annual Institutional Risk Assessment 2024</h3>
+                                        
+                                        <div class="flex flex-wrap items-center gap-3 lg:gap-4 text-xs lg:text-sm text-slate-500 mb-4">
+                                            <div class="flex items-center gap-1.5">
+                                                <span class="material-symbols-outlined text-sm">business</span>
+                                                <span>All Departments (16 offices)</span>
+                                            </div>
+                                            <div class="flex items-center gap-1.5">
+                                                <span class="material-symbols-outlined text-sm">schedule</span>
+                                                <span>Opened: Oct 15, 2024</span>
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="space-y-2">
+                                            <div class="flex justify-between text-[10px] lg:text-xs font-bold">
+                                                <span class="text-slate-600 dark:text-slate-400">Institutional Progress</span>
+                                                <span class="text-primary">75% (12/16 completed)</span>
+                                            </div>
+                                            <div class="w-full h-2 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
+                                                <div class="bg-primary h-full rounded-full" style="width: 75%;"></div>
+                                            </div>
+                                            <div class="flex justify-between items-center">
+                                                <p class="text-[10px] lg:text-xs text-slate-400">Your office: <span class="text-emerald-600 font-bold">Completed</span></p>
+                                                <p class="text-[10px] lg:text-xs text-slate-400">Pending: <span class="font-medium text-amber-600">4 offices</span></p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="flex lg:flex-col items-center lg:items-stretch gap-2 lg:min-w-[140px]">
+                                        <a href="/office-head/survey/ARA-2024-001/results" class="w-full px-4 lg:px-6 py-2.5 lg:py-2 bg-primary hover:bg-primary/90 text-white text-xs lg:text-sm font-bold rounded-lg transition-colors shadow-lg shadow-primary/20 flex items-center justify-center gap-1">
+                                            <span class="material-symbols-outlined text-sm">visibility</span>
+                                            View Results
+                                        </a>
+                                        <a href="#" class="w-full px-4 lg:px-6 py-2.5 lg:py-2 border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 text-xs lg:text-sm font-semibold rounded-lg transition-colors flex items-center justify-center gap-1">
+                                            <span class="material-symbols-outlined text-sm">download</span>
+                                            Download Report
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Office response status bar -->
+                            <div class="bg-slate-50 dark:bg-slate-800/50 px-4 lg:px-6 py-2 border-t border-slate-100 dark:border-slate-800">
+                                <div class="flex flex-wrap items-center justify-between gap-2">
+                                    <span class="text-[10px] lg:text-xs text-slate-500">Completion by department:</span>
+                                    <div class="flex items-center gap-2">
+                                        <span class="text-[10px] lg:text-xs font-medium text-emerald-600">12 Completed</span>
+                                        <span class="text-[10px] lg:text-xs text-slate-300">|</span>
+                                        <span class="text-[10px] lg:text-xs font-medium text-amber-600">4 Pending</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Survey Card 2 - Institutional-Wide Survey (In Progress for User) -->
+                        <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-shadow">
+                            <div class="p-4 lg:p-6">
+                                <div class="flex flex-col lg:flex-row lg:items-start justify-between gap-4">
+                                    <div class="flex-1">
+                                        <div class="flex flex-wrap items-center gap-2 lg:gap-3 mb-3">
+                                            <span class="px-2.5 py-1 badge-institutional text-[10px] lg:text-xs font-bold uppercase tracking-wider rounded flex items-center gap-1">
+                                                <span class="material-symbols-outlined text-xs">account_balance</span>
+                                                Institutional-Wide
+                                            </span>
+                                            <span class="px-2.5 py-1 bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 text-[10px] font-bold uppercase tracking-wider rounded">Action Required</span>
+                                            <span class="text-[10px] lg:text-xs text-slate-500 ml-auto">Due: Nov 15, 2024</span>
+                                        </div>
+                                        
+                                        <h3 class="text-lg lg:text-xl font-bold text-slate-900 dark:text-white leading-tight mb-2">Internal Control Self-Assessment</h3>
+                                        
+                                        <div class="flex flex-wrap items-center gap-3 lg:gap-4 text-xs lg:text-sm text-slate-500 mb-4">
+                                            <div class="flex items-center gap-1.5">
+                                                <span class="material-symbols-outlined text-sm">business</span>
+                                                <span>All Departments (16 offices)</span>
+                                            </div>
+                                            <div class="flex items-center gap-1.5">
+                                                <span class="material-symbols-outlined text-sm">schedule</span>
+                                                <span>Opened: Nov 1, 2024</span>
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="space-y-2">
+                                            <div class="flex justify-between text-[10px] lg:text-xs font-bold">
+                                                <span class="text-slate-600 dark:text-slate-400">Institutional Progress</span>
+                                                <span class="text-primary">50% (8/16 completed)</span>
+                                            </div>
+                                            <div class="w-full h-2 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
+                                                <div class="bg-primary h-full rounded-full" style="width: 50%;"></div>
+                                            </div>
+                                            <div class="flex justify-between items-center">
+                                                <p class="text-[10px] lg:text-xs text-slate-400">Your office: <span class="text-amber-600 font-bold">In Progress (65%)</span></p>
+                                                <p class="text-[10px] lg:text-xs text-slate-400">Pending: <span class="font-medium text-amber-600">8 offices</span></p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="flex lg:flex-col items-center lg:items-stretch gap-2 lg:min-w-[140px]">
+                                        <a href="/office-head/survey/ICS-2024-001" class="w-full px-4 lg:px-6 py-2.5 lg:py-2 bg-primary hover:bg-primary/90 text-white text-xs lg:text-sm font-bold rounded-lg transition-colors shadow-lg shadow-primary/20 flex items-center justify-center gap-1">
+                                            <span class="material-symbols-outlined text-sm">edit</span>
+                                            Continue Survey
+                                        </a>
+                                        <a href="#" class="w-full px-4 lg:px-6 py-2.5 lg:py-2 border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 text-xs lg:text-sm font-semibold rounded-lg transition-colors">
+                                            Save Draft
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Office response status bar -->
+                            <div class="bg-slate-50 dark:bg-slate-800/50 px-4 lg:px-6 py-2 border-t border-slate-100 dark:border-slate-800">
+                                <div class="flex flex-wrap items-center justify-between gap-2">
+                                    <span class="text-[10px] lg:text-xs text-slate-500">Completion by department:</span>
+                                    <div class="flex items-center gap-2">
+                                        <span class="text-[10px] lg:text-xs font-medium text-emerald-600">8 Completed</span>
+                                        <span class="text-[10px] lg:text-xs text-slate-300">|</span>
+                                        <span class="text-[10px] lg:text-xs font-medium text-amber-600">8 Pending</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Survey Card 3 - Department-Specific Survey -->
+                        <div class="bg-white dark:bg-slate-900 border-2 border-purple-200 dark:border-purple-800/50 rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-shadow">
+                            <div class="p-4 lg:p-6">
+                                <div class="flex flex-col lg:flex-row lg:items-start justify-between gap-4">
+                                    <div class="flex-1">
+                                        <div class="flex flex-wrap items-center gap-2 lg:gap-3 mb-3">
+                                            <span class="px-2.5 py-1 bg-gradient-to-r from-purple-600 to-purple-700 text-white text-[10px] lg:text-xs font-bold uppercase tracking-wider rounded flex items-center gap-1">
+                                                <span class="material-symbols-outlined text-xs">domain</span>
+                                                Department-Specific
+                                            </span>
+                                            <span class="px-2.5 py-1 bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 text-[10px] font-bold uppercase tracking-wider rounded">Your Office Only</span>
+                                            <span class="text-[10px] lg:text-xs text-slate-500 ml-auto">Due: Dec 01, 2024</span>
+                                        </div>
+                                        
+                                        <h3 class="text-lg lg:text-xl font-bold text-slate-900 dark:text-white leading-tight mb-2"><%= user.department %> Operational Review</h3>
+                                        
+                                        <div class="flex flex-wrap items-center gap-3 lg:gap-4 text-xs lg:text-sm text-slate-500 mb-4">
+                                            <div class="flex items-center gap-1.5">
+                                                <span class="material-symbols-outlined text-sm">domain</span>
+                                                <span><%= user.department %> Department</span>
+                                            </div>
+                                            <div class="flex items-center gap-1.5">
+                                                <span class="material-symbols-outlined text-sm">person</span>
+                                                <span>Office Head: <%= user.name %></span>
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="space-y-2">
+                                            <div class="flex justify-between text-[10px] lg:text-xs font-bold">
+                                                <span class="text-slate-600 dark:text-slate-400">Your Progress</span>
+                                                <span class="text-primary">0%</span>
+                                            </div>
+                                            <div class="w-full h-2 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
+                                                <div class="bg-primary h-full rounded-full" style="width: 0%;"></div>
+                                            </div>
+                                            <p class="text-[10px] lg:text-xs text-slate-400">Not yet started · Estimated completion time: 15 minutes</p>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="flex lg:flex-col items-center lg:items-stretch gap-2 lg:min-w-[140px]">
+                                        <a href="/office-head/survey/DEPT-2024-001" class="w-full px-4 lg:px-6 py-2.5 lg:py-2 bg-primary hover:bg-primary/90 text-white text-xs lg:text-sm font-bold rounded-lg transition-colors shadow-lg shadow-primary/20 flex items-center justify-center gap-1">
+                                            <span class="material-symbols-outlined text-sm">play_arrow</span>
+                                            Start Survey
+                                        </a>
+                                        <a href="#" class="w-full px-4 lg:px-6 py-2.5 lg:py-2 border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 text-xs lg:text-sm font-semibold rounded-lg transition-colors">
+                                            View Details
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Department-specific badge -->
+                            <div class="bg-purple-50 dark:bg-purple-900/20 px-4 lg:px-6 py-2 border-t border-purple-100 dark:border-purple-800/30">
+                                <div class="flex items-center gap-2">
+                                    <span class="material-symbols-outlined text-purple-600 text-sm">info</span>
+                                    <span class="text-[10px] lg:text-xs text-purple-700 dark:text-purple-400">This assessment is specifically designed for <%= user.department %> Department only.</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Survey Card 4 - Completed Institutional-Wide Survey -->
+                        <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden shadow-sm opacity-90">
+                            <div class="p-4 lg:p-6">
+                                <div class="flex flex-col lg:flex-row lg:items-start justify-between gap-4">
+                                    <div class="flex-1">
+                                        <div class="flex flex-wrap items-center gap-2 lg:gap-3 mb-3">
+                                            <span class="px-2.5 py-1 badge-institutional text-[10px] lg:text-xs font-bold uppercase tracking-wider rounded flex items-center gap-1 opacity-70">
+                                                <span class="material-symbols-outlined text-xs">account_balance</span>
+                                                Institutional-Wide
+                                            </span>
+                                            <span class="px-2.5 py-1 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 text-[10px] font-bold uppercase tracking-wider rounded">Completed</span>
+                                            <span class="text-[10px] lg:text-xs text-slate-500 ml-auto">Ended: Oct 01, 2024</span>
+                                        </div>
+                                        
+                                        <h3 class="text-lg lg:text-xl font-bold text-slate-900 dark:text-white leading-tight mb-2">Q3 Institutional Compliance Assessment</h3>
+                                        
+                                        <div class="flex flex-wrap items-center gap-3 lg:gap-4 text-xs lg:text-sm text-slate-500 mb-4">
+                                            <div class="flex items-center gap-1.5">
+                                                <span class="material-symbols-outlined text-sm">business</span>
+                                                <span>All Departments</span>
+                                            </div>
+                                            <div class="flex items-center gap-1.5">
+                                                <span class="material-symbols-outlined text-sm">check_circle</span>
+                                                <span>Completed on Sep 28, 2024</span>
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="space-y-2">
+                                            <div class="flex justify-between text-[10px] lg:text-xs font-bold">
+                                                <span class="text-slate-600 dark:text-slate-400">Final Completion</span>
+                                                <span class="text-emerald-600">100% (16/16 offices)</span>
+                                            </div>
+                                            <div class="w-full h-2 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
+                                                <div class="bg-emerald-500 h-full rounded-full" style="width: 100%;"></div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="flex lg:flex-col items-center lg:items-stretch gap-2 lg:min-w-[140px]">
+                                        <a href="/office-head/survey/Q3-2024-001/results" class="w-full px-4 lg:px-6 py-2.5 lg:py-2 bg-primary hover:bg-primary/90 text-white text-xs lg:text-sm font-bold rounded-lg transition-colors flex items-center justify-center gap-1">
+                                            <span class="material-symbols-outlined text-sm">visibility</span>
+                                            View Report
+                                        </a>
+                                        <a href="#" class="w-full px-4 lg:px-6 py-2.5 lg:py-2 border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 text-xs lg:text-sm font-semibold rounded-lg transition-colors flex items-center justify-center gap-1">
+                                            <span class="material-symbols-outlined text-sm">download</span>
+                                            Download
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- Right Sidebar (Activity Feed) - Hidden on mobile/tablet -->
+        <aside class="hidden xl:block w-80 border-l border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-4 lg:p-6 overflow-y-auto custom-scrollbar flex-shrink-0">
+            <h4 class="text-sm font-bold text-slate-900 dark:text-white mb-6">Recent Activity</h4>
+            
+            <div class="flex flex-col gap-5">
+                <!-- Activity Item -->
+                <div class="flex gap-3">
+                    <div class="size-8 rounded-full bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400 flex items-center justify-center shrink-0">
+                        <span class="material-symbols-outlined text-lg">check_circle</span>
+                    </div>
+                    <div>
+                        <p class="text-xs text-slate-600 dark:text-slate-400 leading-snug">
+                            <span class="font-bold text-slate-900 dark:text-white">Institutional-Wide:</span> Risk Assessment - 12 offices completed.
+                        </p>
+                        <p class="text-[10px] text-slate-400 mt-1">2 hours ago</p>
+                    </div>
+                </div>
+                
+                <!-- Activity Item -->
+                <div class="flex gap-3">
+                    <div class="size-8 rounded-full bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0">
+                        <span class="material-symbols-outlined text-lg">edit</span>
+                    </div>
+                    <div>
+                        <p class="text-xs text-slate-600 dark:text-slate-400 leading-snug">
+                            <span class="font-bold text-slate-900 dark:text-white">Draft Saved:</span> Internal Control Self-Assessment.
+                        </p>
+                        <p class="text-[10px] text-slate-400 mt-1">5 hours ago</p>
+                    </div>
+                </div>
+                
+                <!-- Activity Item -->
+                <div class="flex gap-3">
+                    <div class="size-8 rounded-full bg-purple-100 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400 flex items-center justify-center shrink-0">
+                        <span class="material-symbols-outlined text-lg">domain</span>
+                    </div>
+                    <div>
+                        <p class="text-xs text-slate-600 dark:text-slate-400 leading-snug">
+                            <span class="font-bold text-slate-900 dark:text-white">Department-Specific:</span> <%= user.department %> Review assigned.
+                        </p>
+                        <p class="text-[10px] text-slate-400 mt-1">Yesterday</p>
+                    </div>
+                </div>
+                
+                <!-- Activity Item -->
+                <div class="flex gap-3">
+                    <div class="size-8 rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 flex items-center justify-center shrink-0">
+                        <span class="material-symbols-outlined text-lg">notifications</span>
+                    </div>
+                    <div>
+                        <p class="text-xs text-slate-600 dark:text-slate-400 leading-snug">
+                            <span class="font-bold text-slate-900 dark:text-white">Reminder:</span> Institutional-Wide Survey due in 3 days.
+                        </p>
+                        <p class="text-[10px] text-slate-400 mt-1">2 days ago</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Support Card -->
+            <div class="mt-8 p-4 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800">
+                <p class="text-xs font-bold text-slate-900 dark:text-white mb-2">Need Assistance?</p>
+                <p class="text-[10px] lg:text-xs text-slate-500 dark:text-slate-400 mb-3">Contact the administration desk for survey access issues.</p>
+                <a href="#" class="block w-full py-2 bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-lg text-[10px] lg:text-xs font-bold text-slate-700 dark:text-slate-200 shadow-sm hover:bg-slate-50 dark:hover:bg-slate-600 transition-colors text-center">
+                    Contact Support
+                </a>
+            </div>
+            
+            <!-- Survey Stats -->
+            <div class="mt-6">
+                <h4 class="text-xs font-bold text-slate-900 dark:text-white mb-3">Your Survey Summary</h4>
+                <div class="space-y-2">
+                    <div class="flex justify-between text-[10px]">
+                        <span class="text-slate-500">Institutional-Wide:</span>
+                        <span class="font-bold text-slate-700 dark:text-slate-300">1 Completed, 2 Active</span>
+                    </div>
+                    <div class="flex justify-between text-[10px]">
+                        <span class="text-slate-500">Department-Specific:</span>
+                        <span class="font-bold text-slate-700 dark:text-slate-300">1 Active</span>
+                    </div>
+                    <div class="flex justify-between text-[10px]">
+                        <span class="text-slate-500">Overall Completion:</span>
+                        <span class="font-bold text-emerald-600">65%</span>
+                    </div>
+                </div>
+            </div>
+        </aside>
+    </div>
+
+    <!-- Scripts -->
+    <%- include('../partials/scripts') %>
+</body>
+</html>

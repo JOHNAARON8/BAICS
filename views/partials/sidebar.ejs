@@ -1,0 +1,149 @@
+<aside id="sidebar" class="
+    fixed lg:static inset-y-0 left-0 z-50
+    w-64 lg:w-64 xl:w-64
+    transform -translate-x-full lg:translate-x-0 transition-transform duration-300 ease-in-out
+    flex flex-col bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800
+    h-full
+">
+    <!-- Logo Area with Close Button -->
+    <div class="p-4 lg:p-6 border-b border-slate-200 dark:border-slate-800 flex-shrink-0">
+        <div class="flex items-center gap-3">
+            <div class="w-10 h-10 bg-primary rounded-lg flex items-center justify-center text-white flex-shrink-0">
+                <span class="material-symbols-outlined">analytics</span>
+            </div>
+            <div class="flex-1 min-w-0">
+                <h1 class="text-lg font-bold tracking-tight text-primary truncate">BAICS <%= role === 'admin' ? 'Admin' : role === 'super-admin' ? 'Super Admin' : 'Office Head' %></h1>
+                <p class="text-xs text-slate-500 font-medium truncate">
+                    <%= role === 'admin' ? 'Institutional Panel' : role === 'super-admin' ? 'System Management' : 'Respondent Portal' %>
+                </p>
+            </div>
+            <!-- Close button for mobile -->
+            <button id="closeSidebar" class="lg:hidden p-1 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg">
+                <span class="material-symbols-outlined">close</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- Navigation - Scrollable -->
+    <nav class="flex-1 overflow-y-auto custom-scrollbar px-3 lg:px-4 py-4 lg:py-6 space-y-1">
+        <% if (role === 'admin') { %>
+            <!-- Admin Navigation -->
+            <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg <%= currentPage === 'dashboard' ? 'bg-primary text-white shadow-sm' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors' %>" href="/admin/dashboard">
+                <span class="material-symbols-outlined">dashboard</span>
+                <span class="text-sm font-medium">Dashboard</span>
+            </a>
+            <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg <%= currentPage === 'survey-management' ? 'bg-primary text-white shadow-sm' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors' %>" href="/admin/survey-management">
+                <span class="material-symbols-outlined">assignment</span>
+                <span class="text-sm font-medium">Survey Management</span>
+            </a>
+            <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg <%= currentPage === 'responses' ? 'bg-primary text-white shadow-sm' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors' %>" href="/admin/responses">
+                <span class="material-symbols-outlined">forum</span>
+                <span class="text-sm font-medium">Responses</span>
+            </a>
+            <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg <%= currentPage === 'monitoring' ? 'bg-primary text-white shadow-sm' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors' %>" href="/admin/monitoring">
+                <span class="material-symbols-outlined">monitoring</span>
+                <span class="text-sm font-medium">Monitoring</span>
+            </a>
+            <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg <%= currentPage === 'reports' ? 'bg-primary text-white shadow-sm' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors' %>" href="/admin/reports">
+                <span class="material-symbols-outlined">bar_chart</span>
+                <span class="text-sm font-medium">Reports</span>
+            </a>
+
+            <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg <%= currentPage === 'office-heads' ? 'bg-primary text-white shadow-sm' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors' %>" href="/admin/office-heads">
+                <span class="material-symbols-outlined">groups</span>
+                <span class="text-sm font-medium">Office Heads</span>
+            </a>
+            
+            <!-- Secondary Navigation for Admin -->
+            <div class="border-t border-slate-200 dark:border-slate-800 my-4 pt-4">
+                <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg <%= currentPage === 'settings' ? 'bg-primary text-white shadow-sm' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors' %>" href="/admin/settings">
+                    <span class="material-symbols-outlined">settings</span>
+                    <span class="text-sm font-medium">Settings</span>
+                </a>
+                <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg <%= currentPage === 'support' ? 'bg-primary text-white shadow-sm' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors' %>" href="/admin/support">
+                    <span class="material-symbols-outlined">help</span>
+                    <span class="text-sm font-medium">Help & Support</span>
+                </a>
+            </div>
+            
+        <% } else if (role === 'super-admin') { %>
+            <!-- Super Admin Navigation (Ready for features) -->
+            <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg <%= currentPage === 'dashboard' ? 'bg-primary text-white shadow-sm' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors' %>" href="/super-admin/dashboard">
+                <span class="material-symbols-outlined">dashboard</span>
+                <span class="text-sm font-medium">Dashboard</span>
+            </a>
+            <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg <%= currentPage === 'users' ? 'bg-primary text-white shadow-sm' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors' %>" href="/super-admin/users">
+                <span class="material-symbols-outlined">people</span>
+                <span class="text-sm font-medium">User Management</span>
+            </a>
+            <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg <%= currentPage === 'admin-logs' ? 'bg-primary text-white shadow-sm' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors' %>" href="/super-admin/admin-logs">
+                <span class="material-symbols-outlined">admin_panel_settings</span>
+                <span class="text-sm font-medium">Admin Logs</span>
+            </a>
+            <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg <%= currentPage === 'system-backup' ? 'bg-primary text-white shadow-sm' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors' %>" href="/super-admin/system-backup">
+                <span class="material-symbols-outlined">database</span>
+                <span class="text-sm font-medium">System Backup</span>
+            </a>
+            
+            <!-- Secondary Navigation for Super Admin -->
+            <div class="border-t border-slate-200 dark:border-slate-800 my-4 pt-4">
+                <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg <%= currentPage === 'syttings' ? 'bg-primary text-white shadow-sm' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors' %>" href="/super-admin/settings">
+                    <span class="material-symbols-outlined">settings</span>
+                    <span class="text-sm font-medium">Settings</span>
+                </a>
+                <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg <%= currentPage === 'support' ? 'bg-primary text-white shadow-sm' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors' %>" href="/super-admin/support">
+                    <span class="material-symbols-outlined">help</span>
+                    <span class="text-sm font-medium">Help & Support</span>
+                </a>
+            </div>
+            
+        <% } else if (role === 'office-head') { %>
+            <!-- Office Head Navigation -->
+            <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg <%= currentPage === 'dashboard' ? 'bg-primary text-white shadow-sm' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors' %>" href="/office-head/dashboard">
+                <span class="material-symbols-outlined">dashboard</span>
+                <span class="text-sm font-medium">Dashboard</span>
+            </a>
+            <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg <%= currentPage === 'my-surveys' ? 'bg-primary text-white shadow-sm' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors' %>" href="/office-head/my-surveys">
+                <span class="material-symbols-outlined">assignment</span>
+                <span class="text-sm font-medium">My Surveys</span>
+            </a>
+            <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg <%= currentPage === 'submission-history' ? 'bg-primary text-white shadow-sm' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors' %>" href="/office-head/submission-history">
+                <span class="material-symbols-outlined">history</span>
+                <span class="text-sm font-medium">Submission History</span>
+            </a>
+            <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg <%= currentPage === 'announcements' ? 'bg-primary text-white shadow-sm' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors' %>" href="/office-head/announcements">
+                <span class="material-symbols-outlined">notifications</span>
+                <span class="text-sm font-medium">Announcements</span>
+            </a>
+
+            <!-- Secondary Navigation for Office Head -->
+            <div class="border-t border-slate-200 dark:border-slate-800 my-4 pt-4">
+                <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg <%= currentPage === 'settings' ? 'bg-primary text-white shadow-sm' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors' %>" href="/office-head/settings">
+                    <span class="material-symbols-outlined">settings</span>
+                    <span class="text-sm font-medium">Settings</span>
+                </a>
+                <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg <%= currentPage === 'support' ? 'bg-primary text-white shadow-sm' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors' %>" href="/office-head/support">
+                    <span class="material-symbols-outlined">help</span>
+                    <span class="text-sm font-medium">Help & Support</span>
+                </a>
+
+            </div>
+        <% } %>
+    </nav>
+
+    <!-- User Profile - Always at bottom -->
+    <div class="p-4 border-t border-slate-100 dark:border-slate-800 flex-shrink-0 bg-white dark:bg-slate-900">
+        <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-full bg-slate-200 dark:bg-slate-700 flex items-center justify-center text-slate-500 flex-shrink-0">
+                <span class="material-symbols-outlined">person</span>
+            </div>
+            <div class="min-w-0 flex-1">
+                <p class="text-sm font-bold truncate"><%= user.name %></p>
+                <p class="text-xs text-slate-500 truncate"><%= user.department %></p>
+            </div>
+            <a href="/logout" class="p-1 hover:bg-slate-100 dark:hover:bg-slate-800 rounded">
+                <span class="material-symbols-outlined text-sm">logout</span>
+            </a>
+        </div>
+    </div>
+</aside>

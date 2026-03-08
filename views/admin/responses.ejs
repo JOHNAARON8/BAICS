@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <%- include('../partials/head', { title: 'Responses' }) %>
+</head>
+<body class="bg-background-light dark:bg-background-dark font-display text-slate-900 dark:text-slate-100">
+    <!-- Mobile Menu Overlay -->
+    <div id="mobileMenuOverlay" class="fixed inset-0 bg-black/50 z-40 hidden lg:hidden transition-opacity"></div>
+
+    <div class="flex h-screen overflow-hidden">
+        <!-- Sidebar -->
+        <%- include('../partials/sidebar', { 
+            role: 'admin', 
+            currentPage: 'responses',
+            user: user 
+        }) %>
+
+        <!-- Main Content -->
+        <main class="flex-1 flex flex-col min-w-0 h-screen overflow-hidden bg-background-light dark:bg-background-dark">
+            <!-- Header -->
+            <%- include('../partials/header', { 
+                role: 'admin', 
+                pageTitle: 'Responses',
+                user: user 
+            }) %>
+
+            <!-- Scrollable Content Area -->
+            <div class="flex-1 overflow-y-auto custom-scrollbar">
+                <div class="p-4 lg:p-8 space-y-6 lg:space-y-8">
+                    <!-- Title & Export - Responsive -->
+                    <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
+                        <div>
+                            <h2 class="text-2xl lg:text-3xl font-black text-slate-900 dark:text-white tracking-tight leading-none mb-1 lg:mb-2">Departmental Responses</h2>
+                            <p class="text-sm lg:text-base text-slate-500 dark:text-slate-400">Real-time overview of survey completion rates across institutional departments.</p>
+                        </div>
+                        <button class="w-full sm:w-auto flex items-center justify-center gap-2 px-4 lg:px-6 py-2.5 lg:py-2.5 bg-primary text-white rounded-lg font-bold text-sm shadow-lg shadow-primary/20 hover:bg-primary/90 transition-all">
+                            <span class="material-symbols-outlined text-lg">download</span>
+                            <span>Export Dataset</span>
+                        </button>
+                    </div>
+
+                    <!-- Metrics - Simplified for per-office respondents -->
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-6">
+                        <div class="bg-white dark:bg-slate-900 p-4 lg:p-6 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm">
+                            <div class="flex items-center justify-between mb-3 lg:mb-4">
+                                <span class="text-xs lg:text-sm font-medium text-slate-500 dark:text-slate-400">Total Offices</span>
+                                <div class="size-8 lg:size-10 bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 rounded-lg flex items-center justify-center">
+                                    <span class="material-symbols-outlined text-lg lg:text-xl">business</span>
+                                </div>
+                            </div>
+                            <div class="flex items-end gap-2 lg:gap-3">
+                                <p class="text-2xl lg:text-3xl font-black text-slate-900 dark:text-white">24</p>
+                                <span class="text-emerald-600 font-bold text-xs lg:text-sm mb-1 flex items-center">
+                                    <span class="material-symbols-outlined text-xs lg:text-sm">trending_up</span>
+                                    +2
+                                </span>
+                            </div>
+                        </div>
+
+                        <div class="bg-white dark:bg-slate-900 p-4 lg:p-6 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm">
+                            <div class="flex items-center justify-between mb-3 lg:mb-4">
+                                <span class="text-xs lg:text-sm font-medium text-slate-500 dark:text-slate-400">Responses Received</span>
+                                <div class="size-8 lg:size-10 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400 rounded-lg flex items-center justify-center">
+                                    <span class="material-symbols-outlined text-lg lg:text-xl">checklist</span>
+                                </div>
+                            </div>
+                            <div class="flex items-end gap-2 lg:gap-3">
+                                <p class="text-2xl lg:text-3xl font-black text-slate-900 dark:text-white">18</p>
+                                <span class="text-emerald-600 font-bold text-xs lg:text-sm mb-1 flex items-center">
+                                    <span class="material-symbols-outlined text-xs lg:text-sm">trending_up</span>
+                                    +3
+                                </span>
+                            </div>
+                        </div>
+
+                        <div class="bg-white dark:bg-slate-900 p-4 lg:p-6 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm sm:col-span-2 lg:col-span-1">
+                            <div class="flex items-center justify-between mb-3 lg:mb-4">
+                                <span class="text-xs lg:text-sm font-medium text-slate-500 dark:text-slate-400">Overall Completion</span>
+                                <div class="size-8 lg:size-10 bg-amber-50 dark:bg-amber-900/20 text-amber-600 dark:text-amber-400 rounded-lg flex items-center justify-center">
+                                    <span class="material-symbols-outlined text-lg lg:text-xl">donut_large</span>
+                                </div>
+                            </div>
+                            <div class="flex items-end gap-2 lg:gap-3">
+                                <p class="text-2xl lg:text-3xl font-black text-slate-900 dark:text-white">75%</p>
+                                <span class="text-amber-600 font-bold text-xs lg:text-sm mb-1 flex items-center">
+                                    <span class="material-symbols-outlined text-xs lg:text-sm">pending</span>
+                                    6 pending
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Tabs & Filters - Scrollable on mobile -->
+                    <div class="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 overflow-hidden">
+                        <div class="border-b border-slate-200 dark:border-slate-800 px-4 lg:px-6 overflow-x-auto custom-scrollbar">
+                            <div class="flex gap-4 lg:gap-8 min-w-max">
+                                <button class="py-3 lg:py-4 border-b-2 border-primary text-primary text-xs lg:text-sm font-bold whitespace-nowrap">All Departments</button>
+                                <button class="py-3 lg:py-4 border-b-2 border-transparent text-slate-500 hover:text-slate-900 dark:hover:text-white text-xs lg:text-sm font-medium transition-all whitespace-nowrap">Academic</button>
+                                <button class="py-3 lg:py-4 border-b-2 border-transparent text-slate-500 hover:text-slate-900 dark:hover:text-white text-xs lg:text-sm font-medium transition-all whitespace-nowrap">Administrative</button>
+                                <button class="py-3 lg:py-4 border-b-2 border-transparent text-slate-500 hover:text-slate-900 dark:hover:text-white text-xs lg:text-sm font-medium transition-all whitespace-nowrap">Research</button>
+                            </div>
+                        </div>
+
+                        <!-- Table - Responsive with horizontal scroll -->
+                        <div class="overflow-x-auto custom-scrollbar">
+                            <table class="w-full text-left min-w-[700px] lg:min-w-0">
+                                <thead class="bg-slate-50 dark:bg-slate-800/50">
+                                    <tr>
+                                        <th class="px-4 lg:px-6 py-3 lg:py-4 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Department</th>
+                                        <th class="px-4 lg:px-6 py-3 lg:py-4 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider text-center">Response</th>
+                                        <th class="px-4 lg:px-6 py-3 lg:py-4 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Completion</th>
+                                        <th class="px-4 lg:px-6 py-3 lg:py-4 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Status</th>
+                                        <th class="px-4 lg:px-6 py-3 lg:py-4 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-slate-200 dark:divide-slate-800">
+                                    <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors">
+                                        <td class="px-4 lg:px-6 py-3 lg:py-4">
+                                            <div class="flex items-center gap-2 lg:gap-3">
+                                                <div class="size-7 lg:size-8 rounded bg-primary/10 flex items-center justify-center text-primary flex-shrink-0">
+                                                    <span class="material-symbols-outlined text-base lg:text-lg">school</span>
+                                                </div>
+                                                <span class="text-xs lg:text-sm font-bold truncate max-w-[150px] lg:max-w-none">Faculty of Science</span>
+                                            </div>
+                                        </td>
+                                        <td class="px-4 lg:px-6 py-3 lg:py-4 text-center">
+                                            <span class="text-xs lg:text-sm font-bold text-emerald-600">Submitted</span>
+                                        </td>
+                                        <td class="px-4 lg:px-6 py-3 lg:py-4">
+                                            <div class="flex items-center gap-2">
+                                                <div class="flex-1 h-1.5 lg:h-2 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden min-w-[80px] lg:min-w-[100px]">
+                                                    <div class="h-full bg-emerald-500" style="width: 100%"></div>
+                                                </div>
+                                                <span class="text-[10px] lg:text-xs font-bold">100%</span>
+                                            </div>
+                                        </td>
+                                        <td class="px-4 lg:px-6 py-3 lg:py-4">
+                                            <span class="inline-flex items-center px-2 py-0.5 lg:px-2.5 lg:py-0.5 rounded-full text-[10px] lg:text-xs font-bold bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-400 whitespace-nowrap">Completed</span>
+                                        </td>
+                                        <td class="px-4 lg:px-6 py-3 lg:py-4">
+                                            <button class="text-primary hover:text-primary/70 font-bold text-[10px] lg:text-xs uppercase whitespace-nowrap">View Details</button>
+                                        </td>
+                                    </tr>
+                                    <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors">
+                                        <td class="px-4 lg:px-6 py-3 lg:py-4">
+                                            <div class="flex items-center gap-2 lg:gap-3">
+                                                <div class="size-7 lg:size-8 rounded bg-primary/10 flex items-center justify-center text-primary flex-shrink-0">
+                                                    <span class="material-symbols-outlined text-base lg:text-lg">account_balance</span>
+                                                </div>
+                                                <span class="text-xs lg:text-sm font-bold truncate max-w-[150px] lg:max-w-none">Finance & HR</span>
+                                            </div>
+                                        </td>
+                                        <td class="px-4 lg:px-6 py-3 lg:py-4 text-center">
+                                            <span class="text-xs lg:text-sm font-bold text-emerald-600">Submitted</span>
+                                        </td>
+                                        <td class="px-4 lg:px-6 py-3 lg:py-4">
+                                            <div class="flex items-center gap-2">
+                                                <div class="flex-1 h-1.5 lg:h-2 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden min-w-[80px] lg:min-w-[100px]">
+                                                    <div class="h-full bg-emerald-500" style="width: 100%"></div>
+                                                </div>
+                                                <span class="text-[10px] lg:text-xs font-bold">100%</span>
+                                            </div>
+                                        </td>
+                                        <td class="px-4 lg:px-6 py-3 lg:py-4">
+                                            <span class="inline-flex items-center px-2 py-0.5 lg:px-2.5 lg:py-0.5 rounded-full text-[10px] lg:text-xs font-bold bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-400 whitespace-nowrap">Completed</span>
+                                        </td>
+                                        <td class="px-4 lg:px-6 py-3 lg:py-4">
+                                            <button class="text-primary hover:text-primary/70 font-bold text-[10px] lg:text-xs uppercase whitespace-nowrap">View Details</button>
+                                        </td>
+                                    </tr>
+                                    <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors">
+                                        <td class="px-4 lg:px-6 py-3 lg:py-4">
+                                            <div class="flex items-center gap-2 lg:gap-3">
+                                                <div class="size-7 lg:size-8 rounded bg-primary/10 flex items-center justify-center text-primary flex-shrink-0">
+                                                    <span class="material-symbols-outlined text-base lg:text-lg">science</span>
+                                                </div>
+                                                <span class="text-xs lg:text-sm font-bold truncate max-w-[150px] lg:max-w-none">Research Labs</span>
+                                            </div>
+                                        </td>
+                                        <td class="px-4 lg:px-6 py-3 lg:py-4 text-center">
+                                            <span class="text-xs lg:text-sm font-bold text-amber-600">Pending</span>
+                                        </td>
+                                        <td class="px-4 lg:px-6 py-3 lg:py-4">
+                                            <div class="flex items-center gap-2">
+                                                <div class="flex-1 h-1.5 lg:h-2 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden min-w-[80px] lg:min-w-[100px]">
+                                                    <div class="h-full bg-amber-500" style="width: 0%"></div>
+                                                </div>
+                                                <span class="text-[10px] lg:text-xs font-bold">0%</span>
+                                            </div>
+                                        </td>
+                                        <td class="px-4 lg:px-6 py-3 lg:py-4">
+                                            <span class="inline-flex items-center px-2 py-0.5 lg:px-2.5 lg:py-0.5 rounded-full text-[10px] lg:text-xs font-bold bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400 whitespace-nowrap">Awaiting</span>
+                                        </td>
+                                        <td class="px-4 lg:px-6 py-3 lg:py-4">
+                                            <button class="text-primary hover:text-primary/70 font-bold text-[10px] lg:text-xs uppercase whitespace-nowrap">View Details</button>
+                                        </td>
+                                    </tr>
+                                    <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors">
+                                        <td class="px-4 lg:px-6 py-3 lg:py-4">
+                                            <div class="flex items-center gap-2 lg:gap-3">
+                                                <div class="size-7 lg:size-8 rounded bg-primary/10 flex items-center justify-center text-primary flex-shrink-0">
+                                                    <span class="material-symbols-outlined text-base lg:text-lg">gavel</span>
+                                                </div>
+                                                <span class="text-xs lg:text-sm font-bold truncate max-w-[150px] lg:max-w-none">Legal Affairs</span>
+                                            </div>
+                                        </td>
+                                        <td class="px-4 lg:px-6 py-3 lg:py-4 text-center">
+                                            <span class="text-xs lg:text-sm font-bold text-emerald-600">Submitted</span>
+                                        </td>
+                                        <td class="px-4 lg:px-6 py-3 lg:py-4">
+                                            <div class="flex items-center gap-2">
+                                                <div class="flex-1 h-1.5 lg:h-2 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden min-w-[80px] lg:min-w-[100px]">
+                                                    <div class="h-full bg-emerald-500" style="width: 100%"></div>
+                                                </div>
+                                                <span class="text-[10px] lg:text-xs font-bold">100%</span>
+                                            </div>
+                                        </td>
+                                        <td class="px-4 lg:px-6 py-3 lg:py-4">
+                                            <span class="inline-flex items-center px-2 py-0.5 lg:px-2.5 lg:py-0.5 rounded-full text-[10px] lg:text-xs font-bold bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-400 whitespace-nowrap">Completed</span>
+                                        </td>
+                                        <td class="px-4 lg:px-6 py-3 lg:py-4">
+                                            <button class="text-primary hover:text-primary/70 font-bold text-[10px] lg:text-xs uppercase whitespace-nowrap">View Details</button>
+                                        </td>
+                                    </tr>
+                                    <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors">
+                                        <td class="px-4 lg:px-6 py-3 lg:py-4">
+                                            <div class="flex items-center gap-2 lg:gap-3">
+                                                <div class="size-7 lg:size-8 rounded bg-primary/10 flex items-center justify-center text-primary flex-shrink-0">
+                                                    <span class="material-symbols-outlined text-base lg:text-lg">computer</span>
+                                                </div>
+                                                <span class="text-xs lg:text-sm font-bold truncate max-w-[150px] lg:max-w-none">IT Department</span>
+                                            </div>
+                                        </td>
+                                        <td class="px-4 lg:px-6 py-3 lg:py-4 text-center">
+                                            <span class="text-xs lg:text-sm font-bold text-amber-600">Pending</span>
+                                        </td>
+                                        <td class="px-4 lg:px-6 py-3 lg:py-4">
+                                            <div class="flex items-center gap-2">
+                                                <div class="flex-1 h-1.5 lg:h-2 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden min-w-[80px] lg:min-w-[100px]">
+                                                    <div class="h-full bg-amber-500" style="width: 0%"></div>
+                                                </div>
+                                                <span class="text-[10px] lg:text-xs font-bold">0%</span>
+                                            </div>
+                                        </td>
+                                        <td class="px-4 lg:px-6 py-3 lg:py-4">
+                                            <span class="inline-flex items-center px-2 py-0.5 lg:px-2.5 lg:py-0.5 rounded-full text-[10px] lg:text-xs font-bold bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400 whitespace-nowrap">Awaiting</span>
+                                        </td>
+                                        <td class="px-4 lg:px-6 py-3 lg:py-4">
+                                            <button class="text-primary hover:text-primary/70 font-bold text-[10px] lg:text-xs uppercase whitespace-nowrap">View Details</button>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <!-- Pagination - Responsive -->
+                        <div class="bg-slate-50 dark:bg-slate-800/50 px-4 lg:px-6 py-3 lg:py-4 flex flex-col sm:flex-row items-center justify-between gap-3 border-t border-slate-200 dark:border-slate-800">
+                            <p class="text-[10px] lg:text-xs text-slate-500 font-medium tracking-wide">Showing 1-5 of 24 Offices</p>
+                            <div class="flex items-center gap-1 lg:gap-2">
+                                <button class="size-7 lg:size-8 flex items-center justify-center rounded bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-400 cursor-not-allowed">
+                                    <span class="material-symbols-outlined text-sm">chevron_left</span>
+                                </button>
+                                <button class="size-7 lg:size-8 flex items-center justify-center rounded bg-primary text-white font-bold text-xs">1</button>
+                                <button class="size-7 lg:size-8 flex items-center justify-center rounded bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 font-bold text-xs hover:border-primary transition-colors">2</button>
+                                <button class="size-7 lg:size-8 flex items-center justify-center rounded bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 font-bold text-xs hover:border-primary transition-colors">3</button>
+                                <button class="size-7 lg:size-8 flex items-center justify-center rounded bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 hover:border-primary transition-colors">
+                                    <span class="material-symbols-outlined text-sm">chevron_right</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Summary Card - Optional -->
+                    <div class="bg-primary/5 dark:bg-primary/10 rounded-xl p-4 lg:p-6 border border-primary/20 dark:border-primary/30">
+                        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                            <div class="flex items-center gap-3">
+                                <div class="size-10 lg:size-12 bg-primary/20 rounded-lg flex items-center justify-center text-primary">
+                                    <span class="material-symbols-outlined text-xl lg:text-2xl">info</span>
+                                </div>
+                                <div>
+                                    <h3 class="text-sm lg:text-base font-bold text-primary">Response Summary</h3>
+                                    <p class="text-xs lg:text-sm text-slate-600 dark:text-slate-400">18 of 24 department heads have submitted their responses</p>
+                                </div>
+                            </div>
+                            <div class="text-2xl lg:text-3xl font-black text-primary">75%</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Scripts -->
+    <%- include('../partials/scripts') %>
+</body>
+</html>

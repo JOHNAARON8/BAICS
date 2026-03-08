@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <%- include('../partials/head', { title: 'Settings' }) %>
+</head>
+
+<body class="bg-background-light dark:bg-background-dark font-display text-slate-900 dark:text-slate-100">
+
+    <!-- Mobile Menu Overlay -->
+    <div id="mobileMenuOverlay" class="fixed inset-0 bg-black/50 z-40 hidden lg:hidden transition-opacity"></div>
+
+    <div class="flex h-screen overflow-hidden">
+
+        <!-- Sidebar -->
+        <%- include('../partials/sidebar', { 
+            role: 'office-head', 
+            currentPage: 'settings',
+            user: user 
+        }) %>
+
+        <!-- Main Content -->
+        <main class="flex-1 flex flex-col min-w-0 h-screen overflow-hidden bg-background-light dark:bg-background-dark">
+
+            <!-- Header -->
+            <%- include('../partials/header', { 
+                role: 'office-head', 
+                pageTitle: 'Settings',
+                user: user 
+            }) %>
+
+            <!-- Scrollable Content Area -->
+            <div class="flex-1 overflow-y-auto custom-scrollbar">
+                <div class="p-4 lg:p-8">
+
+                    <div class="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-8 text-center">
+
+                        <span class="material-symbols-outlined text-6xl text-primary mb-4">
+                            settings
+                        </span>
+
+                        <h2 class="text-2xl font-bold mb-2">System Settings</h2>
+
+                        <p class="text-slate-500">
+                            Manage system configuration, account settings, and preferences here.
+                        </p>
+
+                    </div>
+
+                </div>
+            </div>
+
+        </main>
+    </div>
+
+    <!-- Scripts -->
+    <%- include('../partials/scripts') %>
+
+</body>
+</html>

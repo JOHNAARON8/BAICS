@@ -1,0 +1,909 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <%- include('../partials/head', { title: 'User Logs' }) %>
+    <style>
+        .log-entry {
+            transition: all 0.2s ease;
+            border-left: 3px solid transparent;
+        }
+        .log-entry:hover {
+            background-color: #f8fafc;
+            border-left-color: #1d3e8b;
+        }
+        .log-level-badge {
+            padding: 2px 8px;
+            border-radius: 30px;
+            font-size: 10px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+        .log-level-info {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+        .log-level-warning {
+            background: #fef3c7;
+            color: #92400e;
+        }
+        .log-level-error {
+            background: #fee2e2;
+            color: #b91c1c;
+        }
+        .log-level-success {
+            background: #dcfce7;
+            color: #166534;
+        }
+        .action-badge {
+            padding: 4px 10px;
+            border-radius: 30px;
+            font-size: 11px;
+            font-weight: 500;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .action-login {
+            background: #e0f2fe;
+            color: #0369a1;
+        }
+        .action-logout {
+            background: #e2e8f0;
+            color: #334155;
+        }
+        .action-create {
+            background: #dcfce7;
+            color: #166534;
+        }
+        .action-update {
+            background: #fef9c3;
+            color: #854d0e;
+        }
+        .action-delete {
+            background: #fee2e2;
+            color: #b91c1c;
+        }
+        .action-view {
+            background: #e0e7ff;
+            color: #3730a3;
+        }
+        .action-export {
+            background: #f1f5f9;
+            color: #475569;
+        }
+        .filter-pill {
+            padding: 6px 14px;
+            border-radius: 30px;
+            font-size: 12px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: 1px solid #e2e8f0;
+        }
+        .filter-pill.active {
+            background: #1d3e8b;
+            color: white;
+            border-color: #1d3e8b;
+        }
+        .filter-pill:hover:not(.active) {
+            background: #f1f5f9;
+        }
+        .date-picker {
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 8px 12px;
+            font-size: 13px;
+        }
+        .stat-card {
+            background: white;
+            border-radius: 12px;
+            padding: 16px;
+            border: 1px solid #e2e8f0;
+            transition: all 0.2s;
+        }
+        .stat-card:hover {
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+        }
+        .timeline-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            position: absolute;
+            left: -20px;
+            top: 6px;
+        }
+        .timeline-line {
+            position: relative;
+            padding-left: 30px;
+        }
+        .timeline-line::before {
+            content: '';
+            position: absolute;
+            left: 15px;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background: #e2e8f0;
+        }
+        .log-detail-modal {
+            transition: opacity 0.2s ease;
+        }
+        .log-detail-modal.hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body class="bg-[#f8fafc] dark:bg-background-dark font-display">
+    <!-- Mobile Menu Overlay -->
+    <div id="mobileMenuOverlay" class="fixed inset-0 bg-black/50 z-40 hidden lg:hidden"></div>
+
+    <div class="flex h-screen overflow-hidden">
+        <!-- Sidebar -->
+        <%- include('../partials/sidebar', { 
+            role: 'super-admin', 
+            currentPage: 'admin-logs',
+            user: user 
+        }) %>
+
+        <!-- Main Content -->
+        <main class="flex-1 flex flex-col min-w-0 h-screen overflow-hidden bg-[#f8fafc] dark:bg-background-dark">
+            <!-- Header -->
+            <%- include('../partials/header', { 
+                role: 'super-admin', 
+                pageTitle: 'User Logs',
+                user: user 
+            }) %>
+
+            <!-- Scrollable Content -->
+            <div class="flex-1 overflow-y-auto custom-scrollbar p-6 lg:p-8">
+                <div class="max-w-7xl mx-auto">
+                    <!-- Header with Actions -->
+                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+                        <div>
+                            <h1 class="text-2xl lg:text-3xl font-bold text-slate-800">User Activity Logs</h1>
+                            <p class="text-sm text-slate-500 mt-1">Track all user activities including logins, actions, and system events</p>
+                        </div>
+                        <div class="flex gap-3">
+                            <button class="px-4 py-2 border border-slate-300 rounded-lg text-sm font-medium hover:bg-slate-50 flex items-center gap-2" onclick="exportLogs()">
+                                <span class="material-symbols-outlined text-sm">download</span>
+                                Export Logs
+                            </button>
+                            <button class="px-4 py-2 bg-primary text-white rounded-lg text-sm font-semibold flex items-center gap-2 shadow-md hover:bg-primary/90" onclick="refreshLogs()">
+                                <span class="material-symbols-outlined text-sm">refresh</span>
+                                Refresh
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Stats Cards -->
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+                        <div class="stat-card">
+                            <div class="flex items-center justify-between mb-2">
+                                <span class="text-sm text-slate-500">Total Logs</span>
+                                <span class="material-symbols-outlined text-primary">database</span>
+                            </div>
+                            <p class="text-2xl font-bold">12,845</p>
+                            <p class="text-xs text-slate-400 mt-1">Last 30 days</p>
+                        </div>
+                        
+                        <div class="stat-card">
+                            <div class="flex items-center justify-between mb-2">
+                                <span class="text-sm text-slate-500">Logins Today</span>
+                                <span class="material-symbols-outlined text-emerald-600">login</span>
+                            </div>
+                            <p class="text-2xl font-bold text-emerald-600">24</p>
+                            <p class="text-xs text-slate-400 mt-1">↑ 8 from yesterday</p>
+                        </div>
+                        
+                        <div class="stat-card">
+                            <div class="flex items-center justify-between mb-2">
+                                <span class="text-sm text-slate-500">Active Users</span>
+                                <span class="material-symbols-outlined text-blue-600">person</span>
+                            </div>
+                            <p class="text-2xl font-bold text-blue-600">18</p>
+                            <p class="text-xs text-slate-400 mt-1">Logged in last 24h</p>
+                        </div>
+                        
+                        <div class="stat-card">
+                            <div class="flex items-center justify-between mb-2">
+                                <span class="text-sm text-slate-500">Failed Attempts</span>
+                                <span class="material-symbols-outlined text-red-600">warning</span>
+                            </div>
+                            <p class="text-2xl font-bold text-red-600">3</p>
+                            <p class="text-xs text-slate-400 mt-1">Last 7 days</p>
+                        </div>
+                    </div>
+
+                    <!-- Filters -->
+                    <div class="bg-white rounded-xl border border-slate-200 p-4 mb-6">
+                        <div class="grid grid-cols-1 lg:grid-cols-4 gap-4">
+                            <!-- Date Range -->
+                            <div>
+                                <label class="block text-xs font-medium text-slate-500 mb-1">Date Range</label>
+                                <select class="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20">
+                                    <option>Last 24 hours</option>
+                                    <option selected>Last 7 days</option>
+                                    <option>Last 30 days</option>
+                                    <option>Last 90 days</option>
+                                    <option>Custom range</option>
+                                </select>
+                            </div>
+                            
+                            <!-- User Type -->
+                            <div>
+                                <label class="block text-xs font-medium text-slate-500 mb-1">User Type</label>
+                                <select class="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20" id="userTypeFilter" onchange="filterByUserType(this.value)">
+                                    <option value="all">All Users</option>
+                                    <option value="super-admin">Super Admin</option>
+                                    <option value="admin">Admins</option>
+                                    <option value="office-head">Office Heads</option>
+                                </select>
+                            </div>
+                            
+                            <!-- Action Type -->
+                            <div>
+                                <label class="block text-xs font-medium text-slate-500 mb-1">Action Type</label>
+                                <select class="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20" id="actionFilter" onchange="filterByAction(this.value)">
+                                    <option value="all">All Actions</option>
+                                    <option value="login">Login</option>
+                                    <option value="logout">Logout</option>
+                                    <option value="create">Create</option>
+                                    <option value="update">Update</option>
+                                    <option value="delete">Delete</option>
+                                    <option value="view">View</option>
+                                    <option value="export">Export</option>
+                                </select>
+                            </div>
+                            
+                            <!-- Search -->
+                            <div>
+                                <label class="block text-xs font-medium text-slate-500 mb-1">Search</label>
+                                <div class="relative">
+                                    <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm">search</span>
+                                    <input type="text" class="w-full pl-9 pr-4 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20" 
+                                           placeholder="Search user or action..." id="searchInput">
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Quick Filter Pills -->
+                        <div class="flex flex-wrap gap-2 mt-4 pt-3 border-t border-slate-100">
+                            <span class="filter-pill active" onclick="filterByLevel('all')" id="level-all">All Levels</span>
+                            <span class="filter-pill" onclick="filterByLevel('info')" id="level-info">Info</span>
+                            <span class="filter-pill" onclick="filterByLevel('success')" id="level-success">Success</span>
+                            <span class="filter-pill" onclick="filterByLevel('warning')" id="level-warning">Warning</span>
+                            <span class="filter-pill" onclick="filterByLevel('error')" id="level-error">Error</span>
+                        </div>
+                    </div>
+
+                    <!-- Logs Table -->
+                    <div class="bg-white rounded-xl border border-slate-200 overflow-hidden">
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-sm">
+                                <thead class="bg-slate-50 border-b border-slate-200">
+                                    <tr>
+                                        <th class="px-6 py-4 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Timestamp</th>
+                                        <th class="px-6 py-4 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">User</th>
+                                        <th class="px-6 py-4 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Role</th>
+                                        <th class="px-6 py-4 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Action</th>
+                                        <th class="px-6 py-4 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">IP Address</th>
+                                        <th class="px-6 py-4 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Status</th>
+                                        <th class="px-6 py-4 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Details</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-slate-200" id="logsTable">
+                                    <!-- Today's Logs -->
+                                    <tr class="log-entry" data-level="success" data-user-type="admin" data-action="login">
+                                        <td class="px-6 py-4 text-sm whitespace-nowrap">2024-04-15 09:30:45</td>
+                                        <td class="px-6 py-4">
+                                            <div class="flex items-center gap-2">
+                                                <div class="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center text-primary">
+                                                    <span class="material-symbols-outlined text-xs">admin_panel_settings</span>
+                                                </div>
+                                                <span class="font-medium">Maria Santos</span>
+                                            </div>
+                                        </td>
+                                        <td class="px-6 py-4">
+                                            <span class="px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs">Admin</span>
+                                        </td>
+                                        <td class="px-6 py-4">
+                                            <span class="action-badge action-login">
+                                                <span class="material-symbols-outlined text-xs">login</span>
+                                                Login
+                                            </span>
+                                        </td>
+                                        <td class="px-6 py-4 text-sm font-mono">192.168.1.105</td>
+                                        <td class="px-6 py-4">
+                                            <span class="log-level-badge log-level-success">Success</span>
+                                        </td>
+                                        <td class="px-6 py-4">
+                                            <button class="text-primary hover:text-primary/70 text-xs font-medium" onclick="viewLogDetails(1)">
+                                                View Details
+                                            </button>
+                                        </td>
+                                    </tr>
+
+                                    <tr class="log-entry" data-level="info" data-user-type="office-head" data-action="view">
+                                        <td class="px-6 py-4 text-sm whitespace-nowrap">2024-04-15 09:15:22</td>
+                                        <td class="px-6 py-4">
+                                            <div class="flex items-center gap-2">
+                                                <div class="w-6 h-6 rounded-full bg-green-100 flex items-center justify-center text-green-700">
+                                                    <span class="material-symbols-outlined text-xs">person</span>
+                                                </div>
+                                                <span class="font-medium">Juan Dela Cruz</span>
+                                            </div>
+                                        </td>
+                                        <td class="px-6 py-4">
+                                            <span class="px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs">Office Head</span>
+                                        </td>
+                                        <td class="px-6 py-4">
+                                            <span class="action-badge action-view">
+                                                <span class="material-symbols-outlined text-xs">visibility</span>
+                                                View Survey
+                                            </span>
+                                        </td>
+                                        <td class="px-6 py-4 text-sm font-mono">192.168.1.110</td>
+                                        <td class="px-6 py-4">
+                                            <span class="log-level-badge log-level-info">Info</span>
+                                        </td>
+                                        <td class="px-6 py-4">
+                                            <button class="text-primary hover:text-primary/70 text-xs font-medium" onclick="viewLogDetails(2)">
+                                                View Details
+                                            </button>
+                                        </td>
+                                    </tr>
+
+                                    <tr class="log-entry" data-level="success" data-user-type="office-head" data-action="create">
+                                        <td class="px-6 py-4 text-sm whitespace-nowrap">2024-04-15 08:45:10</td>
+                                        <td class="px-6 py-4">
+                                            <div class="flex items-center gap-2">
+                                                <div class="w-6 h-6 rounded-full bg-green-100 flex items-center justify-center text-green-700">
+                                                    <span class="material-symbols-outlined text-xs">person</span>
+                                                </div>
+                                                <span class="font-medium">Carla Mercado</span>
+                                            </div>
+                                        </td>
+                                        <td class="px-6 py-4">
+                                            <span class="px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs">Office Head</span>
+                                        </td>
+                                        <td class="px-6 py-4">
+                                            <span class="action-badge action-create">
+                                                <span class="material-symbols-outlined text-xs">add</span>
+                                                Submit Response
+                                            </span>
+                                        </td>
+                                        <td class="px-6 py-4 text-sm font-mono">192.168.1.98</td>
+                                        <td class="px-6 py-4">
+                                            <span class="log-level-badge log-level-success">Success</span>
+                                        </td>
+                                        <td class="px-6 py-4">
+                                            <button class="text-primary hover:text-primary/70 text-xs font-medium" onclick="viewLogDetails(3)">
+                                                View Details
+                                            </button>
+                                        </td>
+                                    </tr>
+
+                                    <tr class="log-entry" data-level="warning" data-user-type="office-head" data-action="login">
+                                        <td class="px-6 py-4 text-sm whitespace-nowrap">2024-04-15 08:30:15</td>
+                                        <td class="px-6 py-4">
+                                            <div class="flex items-center gap-2">
+                                                <div class="w-6 h-6 rounded-full bg-amber-100 flex items-center justify-center text-amber-700">
+                                                    <span class="material-symbols-outlined text-xs">person</span>
+                                                </div>
+                                                <span class="font-medium">Michael Tan</span>
+                                            </div>
+                                        </td>
+                                        <td class="px-6 py-4">
+                                            <span class="px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs">Office Head</span>
+                                        </td>
+                                        <td class="px-6 py-4">
+                                            <span class="action-badge action-login">
+                                                <span class="material-symbols-outlined text-xs">login</span>
+                                                Failed Login
+                                            </span>
+                                        </td>
+                                        <td class="px-6 py-4 text-sm font-mono">192.168.1.150</td>
+                                        <td class="px-6 py-4">
+                                            <span class="log-level-badge log-level-warning">Warning</span>
+                                        </td>
+                                        <td class="px-6 py-4">
+                                            <button class="text-primary hover:text-primary/70 text-xs font-medium" onclick="viewLogDetails(4)">
+                                                View Details
+                                            </button>
+                                        </td>
+                                    </tr>
+
+                                    <tr class="log-entry" data-level="success" data-user-type="admin" data-action="update">
+                                        <td class="px-6 py-4 text-sm whitespace-nowrap">2024-04-15 08:15:30</td>
+                                        <td class="px-6 py-4">
+                                            <div class="flex items-center gap-2">
+                                                <div class="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center text-primary">
+                                                    <span class="material-symbols-outlined text-xs">admin_panel_settings</span>
+                                                </div>
+                                                <span class="font-medium">John Reyes</span>
+                                            </div>
+                                        </td>
+                                        <td class="px-6 py-4">
+                                            <span class="px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs">Admin</span>
+                                        </td>
+                                        <td class="px-6 py-4">
+                                            <span class="action-badge action-update">
+                                                <span class="material-symbols-outlined text-xs">edit</span>
+                                                Update Survey
+                                            </span>
+                                        </td>
+                                        <td class="px-6 py-4 text-sm font-mono">192.168.1.105</td>
+                                        <td class="px-6 py-4">
+                                            <span class="log-level-badge log-level-success">Success</span>
+                                        </td>
+                                        <td class="px-6 py-4">
+                                            <button class="text-primary hover:text-primary/70 text-xs font-medium" onclick="viewLogDetails(5)">
+                                                View Details
+                                            </button>
+                                        </td>
+                                    </tr>
+
+                                    <!-- Yesterday's Logs -->
+                                    <tr class="log-entry" data-level="success" data-user-type="super-admin" data-action="login">
+                                        <td class="px-6 py-4 text-sm whitespace-nowrap">2024-04-14 23:45:12</td>
+                                        <td class="px-6 py-4">
+                                            <div class="flex items-center gap-2">
+                                                <div class="w-6 h-6 rounded-full bg-primary flex items-center justify-center text-white">
+                                                    <span class="material-symbols-outlined text-xs">shield</span>
+                                                </div>
+                                                <span class="font-medium">Adrian Thorne</span>
+                                            </div>
+                                        </td>
+                                        <td class="px-6 py-4">
+                                            <span class="px-2 py-1 bg-purple-100 text-purple-800 rounded-full text-xs">Super Admin</span>
+                                        </td>
+                                        <td class="px-6 py-4">
+                                            <span class="action-badge action-login">
+                                                <span class="material-symbols-outlined text-xs">login</span>
+                                                Login
+                                            </span>
+                                        </td>
+                                        <td class="px-6 py-4 text-sm font-mono">192.168.1.100</td>
+                                        <td class="px-6 py-4">
+                                            <span class="log-level-badge log-level-success">Success</span>
+                                        </td>
+                                        <td class="px-6 py-4">
+                                            <button class="text-primary hover:text-primary/70 text-xs font-medium" onclick="viewLogDetails(6)">
+                                                View Details
+                                            </button>
+                                        </td>
+                                    </tr>
+
+                                    <tr class="log-entry" data-level="success" data-user-type="admin" data-action="create">
+                                        <td class="px-6 py-4 text-sm whitespace-nowrap">2024-04-14 16:20:05</td>
+                                        <td class="px-6 py-4">
+                                            <div class="flex items-center gap-2">
+                                                <div class="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center text-primary">
+                                                    <span class="material-symbols-outlined text-xs">admin_panel_settings</span>
+                                                </div>
+                                                <span class="font-medium">Maria Santos</span>
+                                            </div>
+                                        </td>
+                                        <td class="px-6 py-4">
+                                            <span class="px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs">Admin</span>
+                                        </td>
+                                        <td class="px-6 py-4">
+                                            <span class="action-badge action-create">
+                                                <span class="material-symbols-outlined text-xs">add</span>
+                                                Create Office Head
+                                            </span>
+                                        </td>
+                                        <td class="px-6 py-4 text-sm font-mono">192.168.1.105</td>
+                                        <td class="px-6 py-4">
+                                            <span class="log-level-badge log-level-success">Success</span>
+                                        </td>
+                                        <td class="px-6 py-4">
+                                            <button class="text-primary hover:text-primary/70 text-xs font-medium" onclick="viewLogDetails(7)">
+                                                View Details
+                                            </button>
+                                        </td>
+                                    </tr>
+
+                                    <tr class="log-entry" data-level="success" data-user-type="office-head" data-action="logout">
+                                        <td class="px-6 py-4 text-sm whitespace-nowrap">2024-04-14 15:30:22</td>
+                                        <td class="px-6 py-4">
+                                            <div class="flex items-center gap-2">
+                                                <div class="w-6 h-6 rounded-full bg-green-100 flex items-center justify-center text-green-700">
+                                                    <span class="material-symbols-outlined text-xs">person</span>
+                                                </div>
+                                                <span class="font-medium">Anna Reyes</span>
+                                            </div>
+                                        </td>
+                                        <td class="px-6 py-4">
+                                            <span class="px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs">Office Head</span>
+                                        </td>
+                                        <td class="px-6 py-4">
+                                            <span class="action-badge action-logout">
+                                                <span class="material-symbols-outlined text-xs">logout</span>
+                                                Logout
+                                            </span>
+                                        </td>
+                                        <td class="px-6 py-4 text-sm font-mono">192.168.1.112</td>
+                                        <td class="px-6 py-4">
+                                            <span class="log-level-badge log-level-success">Success</span>
+                                        </td>
+                                        <td class="px-6 py-4">
+                                            <button class="text-primary hover:text-primary/70 text-xs font-medium" onclick="viewLogDetails(8)">
+                                                View Details
+                                            </button>
+                                        </td>
+                                    </tr>
+
+                                    <tr class="log-entry" data-level="error" data-user-type="admin" data-action="login">
+                                        <td class="px-6 py-4 text-sm whitespace-nowrap">2024-04-14 14:10:45</td>
+                                        <td class="px-6 py-4">
+                                            <div class="flex items-center gap-2">
+                                                <div class="w-6 h-6 rounded-full bg-red-100 flex items-center justify-center text-red-700">
+                                                    <span class="material-symbols-outlined text-xs">admin_panel_settings</span>
+                                                </div>
+                                                <span class="font-medium">Unknown User</span>
+                                            </div>
+                                        </td>
+                                        <td class="px-6 py-4">
+                                            <span class="px-2 py-1 bg-slate-100 text-slate-600 rounded-full text-xs">Unknown</span>
+                                        </td>
+                                        <td class="px-6 py-4">
+                                            <span class="action-badge action-login">
+                                                <span class="material-symbols-outlined text-xs">login</span>
+                                                Failed Login
+                                            </span>
+                                        </td>
+                                        <td class="px-6 py-4 text-sm font-mono">45.123.67.89</td>
+                                        <td class="px-6 py-4">
+                                            <span class="log-level-badge log-level-error">Error</span>
+                                        </td>
+                                        <td class="px-6 py-4">
+                                            <button class="text-primary hover:text-primary/70 text-xs font-medium" onclick="viewLogDetails(9)">
+                                                View Details
+                                            </button>
+                                        </td>
+                                    </tr>
+
+                                    <tr class="log-entry" data-level="success" data-user-type="admin" data-action="export">
+                                        <td class="px-6 py-4 text-sm whitespace-nowrap">2024-04-14 11:20:33</td>
+                                        <td class="px-6 py-4">
+                                            <div class="flex items-center gap-2">
+                                                <div class="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center text-primary">
+                                                    <span class="material-symbols-outlined text-xs">admin_panel_settings</span>
+                                                </div>
+                                                <span class="font-medium">John Reyes</span>
+                                            </div>
+                                        </td>
+                                        <td class="px-6 py-4">
+                                            <span class="px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs">Admin</span>
+                                        </td>
+                                        <td class="px-6 py-4">
+                                            <span class="action-badge action-export">
+                                                <span class="material-symbols-outlined text-xs">download</span>
+                                                Export Reports
+                                            </span>
+                                        </td>
+                                        <td class="px-6 py-4 text-sm font-mono">192.168.1.108</td>
+                                        <td class="px-6 py-4">
+                                            <span class="log-level-badge log-level-success">Success</span>
+                                        </td>
+                                        <td class="px-6 py-4">
+                                            <button class="text-primary hover:text-primary/70 text-xs font-medium" onclick="viewLogDetails(10)">
+                                                View Details
+                                            </button>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        
+                        <!-- Pagination -->
+                        <div class="px-6 py-4 border-t border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-4">
+                            <p class="text-sm text-slate-500">Showing 1 to 10 of 12,845 logs</p>
+                            <div class="flex gap-2">
+                                <button class="px-3 py-1 border border-slate-300 rounded text-sm disabled:opacity-50" disabled>Previous</button>
+                                <button class="px-3 py-1 bg-primary text-white rounded text-sm">1</button>
+                                <button class="px-3 py-1 border border-slate-300 rounded text-sm hover:bg-slate-50">2</button>
+                                <button class="px-3 py-1 border border-slate-300 rounded text-sm hover:bg-slate-50">3</button>
+                                <button class="px-3 py-1 border border-slate-300 rounded text-sm hover:bg-slate-50">4</button>
+                                <button class="px-3 py-1 border border-slate-300 rounded text-sm hover:bg-slate-50">5</button>
+                                <button class="px-3 py-1 border border-slate-300 rounded text-sm hover:bg-slate-50">Next</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Activity Timeline (Summary) -->
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-6">
+                        <!-- Recent Logins Timeline -->
+                        <div class="bg-white rounded-xl border border-slate-200 p-5">
+                            <h3 class="font-bold text-base mb-4 flex items-center gap-2">
+                                <span class="material-symbols-outlined text-primary">schedule</span>
+                                Recent Logins
+                            </h3>
+                            <div class="timeline-line space-y-4">
+                                <div class="relative">
+                                    <div class="timeline-dot bg-emerald-500"></div>
+                                    <p class="text-sm font-medium">Maria Santos (Admin)</p>
+                                    <p class="text-xs text-slate-500">9:30 AM • 192.168.1.105</p>
+                                </div>
+                                <div class="relative">
+                                    <div class="timeline-dot bg-emerald-500"></div>
+                                    <p class="text-sm font-medium">Juan Dela Cruz (Office Head)</p>
+                                    <p class="text-xs text-slate-500">8:45 AM • 192.168.1.110</p>
+                                </div>
+                                <div class="relative">
+                                    <div class="timeline-dot bg-amber-500"></div>
+                                    <p class="text-sm font-medium">Failed Login - Michael Tan</p>
+                                    <p class="text-xs text-slate-500">8:30 AM • 192.168.1.150</p>
+                                </div>
+                                <div class="relative">
+                                    <div class="timeline-dot bg-emerald-500"></div>
+                                    <p class="text-sm font-medium">Adrian Thorne (Super Admin)</p>
+                                    <p class="text-xs text-slate-500">Yesterday 11:45 PM • 192.168.1.100</p>
+                                </div>
+                            </div>
+                            <button class="w-full mt-4 text-center text-primary text-sm font-medium hover:underline">
+                                View All Logins
+                            </button>
+                        </div>
+
+                        <!-- Top Active Users -->
+                        <div class="bg-white rounded-xl border border-slate-200 p-5">
+                            <h3 class="font-bold text-base mb-4 flex items-center gap-2">
+                                <span class="material-symbols-outlined text-primary">trending_up</span>
+                                Most Active Users
+                            </h3>
+                            <div class="space-y-3">
+                                <div class="flex items-center justify-between">
+                                    <div class="flex items-center gap-2">
+                                        <span class="w-2 h-2 rounded-full bg-primary"></span>
+                                        <span class="text-sm">Maria Santos</span>
+                                    </div>
+                                    <span class="text-sm font-medium">47 actions</span>
+                                </div>
+                                <div class="flex items-center justify-between">
+                                    <div class="flex items-center gap-2">
+                                        <span class="w-2 h-2 rounded-full bg-primary"></span>
+                                        <span class="text-sm">John Reyes</span>
+                                    </div>
+                                    <span class="text-sm font-medium">32 actions</span>
+                                </div>
+                                <div class="flex items-center justify-between">
+                                    <div class="flex items-center gap-2">
+                                        <span class="w-2 h-2 rounded-full bg-primary"></span>
+                                        <span class="text-sm">Carla Mercado</span>
+                                    </div>
+                                    <span class="text-sm font-medium">28 actions</span>
+                                </div>
+                                <div class="flex items-center justify-between">
+                                    <div class="flex items-center gap-2">
+                                        <span class="w-2 h-2 rounded-full bg-primary"></span>
+                                        <span class="text-sm">Juan Dela Cruz</span>
+                                    </div>
+                                    <span class="text-sm font-medium">21 actions</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Action Summary -->
+                        <div class="bg-white rounded-xl border border-slate-200 p-5">
+                            <h3 class="font-bold text-base mb-4 flex items-center gap-2">
+                                <span class="material-symbols-outlined text-primary">pie_chart</span>
+                                Actions Summary
+                            </h3>
+                            <div class="space-y-3">
+                                <div>
+                                    <div class="flex justify-between text-sm mb-1">
+                                        <span>Logins</span>
+                                        <span class="font-medium">156</span>
+                                    </div>
+                                    <div class="w-full h-1.5 bg-slate-100 rounded-full overflow-hidden">
+                                        <div class="bg-blue-500 h-full rounded-full" style="width: 45%"></div>
+                                    </div>
+                                </div>
+                                <div>
+                                    <div class="flex justify-between text-sm mb-1">
+                                        <span>Survey Actions</span>
+                                        <span class="font-medium">98</span>
+                                    </div>
+                                    <div class="w-full h-1.5 bg-slate-100 rounded-full overflow-hidden">
+                                        <div class="bg-green-500 h-full rounded-full" style="width: 28%"></div>
+                                    </div>
+                                </div>
+                                <div>
+                                    <div class="flex justify-between text-sm mb-1">
+                                        <span>User Management</span>
+                                        <span class="font-medium">45</span>
+                                    </div>
+                                    <div class="w-full h-1.5 bg-slate-100 rounded-full overflow-hidden">
+                                        <div class="bg-purple-500 h-full rounded-full" style="width: 13%"></div>
+                                    </div>
+                                </div>
+                                <div>
+                                    <div class="flex justify-between text-sm mb-1">
+                                        <span>Reports & Exports</span>
+                                        <span class="font-medium">32</span>
+                                    </div>
+                                    <div class="w-full h-1.5 bg-slate-100 rounded-full overflow-hidden">
+                                        <div class="bg-amber-500 h-full rounded-full" style="width: 9%"></div>
+                                    </div>
+                                </div>
+                                <div>
+                                    <div class="flex justify-between text-sm mb-1">
+                                        <span>Failed Attempts</span>
+                                        <span class="font-medium">15</span>
+                                    </div>
+                                    <div class="w-full h-1.5 bg-slate-100 rounded-full overflow-hidden">
+                                        <div class="bg-red-500 h-full rounded-full" style="width: 5%"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Log Details Modal -->
+    <div id="logDetailsModal" class="fixed inset-0 bg-black/50 z-50 hidden flex items-center justify-center log-detail-modal">
+        <div class="bg-white rounded-xl max-w-2xl w-full mx-4">
+            <div class="p-6 border-b border-slate-200 flex justify-between items-center">
+                <h2 class="text-xl font-bold">Log Entry Details</h2>
+                <button class="p-1 hover:bg-slate-100 rounded" onclick="closeLogDetails()">
+                    <span class="material-symbols-outlined">close</span>
+                </button>
+            </div>
+            
+            <div class="p-6">
+                <div class="bg-slate-50 p-4 rounded-lg mb-4">
+                    <div class="flex items-center gap-3 mb-3">
+                        <span class="log-level-badge log-level-success" id="detailLevel">Success</span>
+                        <span class="text-sm text-slate-500" id="detailTimestamp">2024-04-15 09:30:45</span>
+                    </div>
+                    
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <p class="text-xs text-slate-500">User</p>
+                            <p class="font-medium" id="detailUser">Maria Santos</p>
+                        </div>
+                        <div>
+                            <p class="text-xs text-slate-500">Role</p>
+                            <p class="font-medium" id="detailRole">Admin</p>
+                        </div>
+                        <div>
+                            <p class="text-xs text-slate-500">Action</p>
+                            <p class="font-medium" id="detailAction">Login</p>
+                        </div>
+                        <div>
+                            <p class="text-xs text-slate-500">IP Address</p>
+                            <p class="font-medium font-mono" id="detailIP">192.168.1.105</p>
+                        </div>
+                        <div>
+                            <p class="text-xs text-slate-500">User Agent</p>
+                            <p class="font-medium text-sm" id="detailUserAgent">Chrome/Windows</p>
+                        </div>
+                        <div>
+                            <p class="text-xs text-slate-500">Location</p>
+                            <p class="font-medium" id="detailLocation">Manila, Philippines</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="border-t border-slate-200 pt-4">
+                    <h4 class="font-medium mb-2">Additional Details</h4>
+                    <div class="bg-slate-50 p-3 rounded-lg text-sm font-mono" id="detailAdditional">
+                        • Login successful<br>
+                        • Session ID: sess_8f7d3a2b1c<br>
+                        • Device: Desktop - Windows 11<br>
+                        • Browser: Chrome 122.0.0
+                    </div>
+                </div>
+            </div>
+            
+            <div class="p-6 border-t border-slate-200 flex justify-end gap-3">
+                <button class="px-4 py-2 border border-slate-300 rounded-lg text-sm font-medium hover:bg-slate-50" onclick="closeLogDetails()">
+                    Close
+                </button>
+                <button class="px-4 py-2 bg-primary text-white rounded-lg text-sm font-semibold hover:bg-primary/90" onclick="exportSingleLog()">
+                    Export This Log
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentLevelFilter = 'all';
+        let currentUserTypeFilter = 'all';
+        let currentActionFilter = 'all';
+
+        // Filter functions
+        function filterByLevel(level) {
+            currentLevelFilter = level;
+            
+            // Update filter pills
+            document.querySelectorAll('[id^="level-"]').forEach(pill => {
+                pill.classList.remove('active');
+            });
+            document.getElementById(`level-${level}`).classList.add('active');
+            
+            applyFilters();
+        }
+
+        function filterByUserType(type) {
+            currentUserTypeFilter = type;
+            applyFilters();
+        }
+
+        function filterByAction(action) {
+            currentActionFilter = action;
+            applyFilters();
+        }
+
+        function applyFilters() {
+            const rows = document.querySelectorAll('#logsTable tr.log-entry');
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            
+            rows.forEach(row => {
+                let show = true;
+                
+                // Level filter
+                if (currentLevelFilter !== 'all' && row.dataset.level !== currentLevelFilter) {
+                    show = false;
+                }
+                
+                // User type filter
+                if (show && currentUserTypeFilter !== 'all' && row.dataset.userType !== currentUserTypeFilter) {
+                    show = false;
+                }
+                
+                // Action filter
+                if (show && currentActionFilter !== 'all' && row.dataset.action !== currentActionFilter) {
+                    show = false;
+                }
+                
+                // Search filter
+                if (show && searchTerm) {
+                    const text = row.textContent.toLowerCase();
+                    if (!text.includes(searchTerm)) show = false;
+                }
+                
+                row.style.display = show ? '' : 'none';
+            });
+        }
+
+        // Search input
+        document.getElementById('searchInput').addEventListener('keyup', applyFilters);
+
+        // Log details modal
+        function viewLogDetails(id) {
+            // In production, fetch log details based on ID
+            document.getElementById('logDetailsModal').classList.remove('hidden');
+        }
+
+        function closeLogDetails() {
+            document.getElementById('logDetailsModal').classList.add('hidden');
+        }
+
+        function exportLogs() {
+            alert('Exporting logs...');
+        }
+
+        function exportSingleLog() {
+            alert('Exporting single log entry...');
+            closeLogDetails();
+        }
+
+        function refreshLogs() {
+            alert('Refreshing logs...');
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            // Set default filters
+            filterByLevel('all');
+        });
+    </script>
+    <%- include('../partials/scripts') %>
+</body>
+</html>

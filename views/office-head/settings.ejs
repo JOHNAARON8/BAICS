@@ -1,0 +1,620 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <%- include('../partials/head', { title: 'Settings' }) %>
+    <style>
+        .settings-tab {
+            transition: all 0.3s ease;
+        }
+        .settings-tab.active {
+            background-color: rgba(29, 62, 139, 0.1);
+            color: #1d3e8b;
+            border-left: 4px solid #1d3e8b;
+        }
+        .dark .settings-tab.active {
+            background-color: rgba(29, 62, 139, 0.2);
+            color: white;
+        }
+        .toggle-switch {
+            position: relative;
+            display: inline-block;
+            width: 50px;
+            height: 24px;
+        }
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        .toggle-slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #cbd5e1;
+            transition: .3s;
+            border-radius: 24px;
+        }
+        .toggle-slider:before {
+            position: absolute;
+            content: "";
+            height: 20px;
+            width: 20px;
+            left: 2px;
+            bottom: 2px;
+            background-color: white;
+            transition: .3s;
+            border-radius: 50%;
+        }
+        input:checked + .toggle-slider {
+            background-color: #1d3e8b;
+        }
+        input:checked + .toggle-slider:before {
+            transform: translateX(26px);
+        }
+    </style>
+</head>
+<body class="bg-background-light dark:bg-background-dark font-display text-slate-900 dark:text-slate-100">
+    <!-- Mobile Menu Overlay -->
+    <div id="mobileMenuOverlay" class="fixed inset-0 bg-black/50 z-40 hidden lg:hidden transition-opacity"></div>
+
+    <div class="flex h-screen overflow-hidden">
+        <!-- Sidebar -->
+        <%- include('../partials/sidebar', { 
+            role: 'office-head', 
+            currentPage: 'settings',
+            user: user 
+        }) %>
+
+        <!-- Main Content -->
+        <main class="flex-1 flex flex-col min-w-0 h-screen overflow-hidden bg-background-light dark:bg-background-dark">
+            <!-- Header -->
+            <%- include('../partials/header', { 
+                role: 'office-head', 
+                pageTitle: 'Settings',
+                user: user 
+            }) %>
+
+            <!-- Scrollable Content Area -->
+            <div class="flex-1 overflow-y-auto custom-scrollbar">
+                <div class="max-w-6xl mx-auto px-4 lg:px-6 py-6 lg:py-8">
+                    <!-- Header Section -->
+                    <div class="mb-6 lg:mb-8">
+                        <h2 class="text-2xl lg:text-3xl font-black text-slate-900 dark:text-white tracking-tight">Settings</h2>
+                        <p class="text-sm lg:text-base text-slate-500 dark:text-slate-400 mt-1">Manage your account preferences and configure your settings.</p>
+                    </div>
+
+                    <!-- Settings Layout -->
+                    <div class="flex flex-col lg:flex-row gap-6 lg:gap-8">
+                        <!-- Settings Sidebar -->
+                        <div class="lg:w-64 flex-shrink-0">
+                            <div class="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 overflow-hidden sticky top-4">
+                                <div class="p-4 border-b border-slate-100 dark:border-slate-800">
+                                    <h3 class="font-bold text-sm">Settings Menu</h3>
+                                </div>
+                                <nav class="p-2 space-y-1">
+                                    <button onclick="showSettingsTab('profile')" id="tab-profile" class="settings-tab w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors text-left active">
+                                        <span class="material-symbols-outlined text-lg">person</span>
+                                        <span class="text-sm font-medium">Profile Information</span>
+                                    </button>
+                                    <button onclick="showSettingsTab('notifications')" id="tab-notifications" class="settings-tab w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors text-left">
+                                        <span class="material-symbols-outlined text-lg">notifications</span>
+                                        <span class="text-sm font-medium">Notifications</span>
+                                    </button>
+                                    <button onclick="showSettingsTab('security')" id="tab-security" class="settings-tab w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors text-left">
+                                        <span class="material-symbols-outlined text-lg">security</span>
+                                        <span class="text-sm font-medium">Security</span>
+                                    </button>
+                                    <button onclick="showSettingsTab('preferences')" id="tab-preferences" class="settings-tab w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors text-left">
+                                        <span class="material-symbols-outlined text-lg">settings</span>
+                                        <span class="text-sm font-medium">Preferences</span>
+                                    </button>
+                                    <div class="border-t border-slate-100 dark:border-slate-800 my-2 pt-2">
+                                        <button onclick="showSettingsTab('privacy')" id="tab-privacy" class="settings-tab w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors text-left">
+                                            <span class="material-symbols-outlined text-lg">privacy_tip</span>
+                                            <span class="text-sm font-medium">Privacy</span>
+                                        </button>
+                                    </div>
+                                </nav>
+                            </div>
+                        </div>
+
+                        <!-- Settings Content -->
+                        <div class="flex-1">
+                            <!-- Profile Settings Tab -->
+                            <div id="settings-profile" class="settings-content block">
+                                <div class="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 overflow-hidden">
+                                    <div class="p-4 lg:p-6 border-b border-slate-100 dark:border-slate-800">
+                                        <h3 class="text-lg font-bold">Profile Information</h3>
+                                        <p class="text-xs lg:text-sm text-slate-500">Update your personal information and contact details</p>
+                                    </div>
+                                    
+                                    <form class="p-4 lg:p-6 space-y-6">
+                                        <!-- Profile Picture -->
+                                        <div class="flex items-center gap-4">
+                                            <div class="w-20 h-20 rounded-full bg-primary/10 flex items-center justify-center overflow-hidden">
+                                                <img src="https://lh3.googleusercontent.com/aida-public/AB6AXuCBl2f09rOnln_cy2lF75egINAfgK2C-NUiERayhZU9YmyXwb2Q1FCdeiDeKLT34xKp6x8Dq-OSi7SdUsj7czw9FJSqEmL5KUds9zL6tmpClGi9nQdL9O6HBKG1TlTs_4GqWgJenAdrGh6LoKAaqUupifVtTG8WQVk9FnlIpi_q4hwya3Ko8LLJZ2CT1z0xXkXEhJu7f29ps-5O2Vngfg5fSH4LRBKgNGoIkHLjVR4H8hUnfH8BGWJXgN_1_wRrX3lpuvGS4lHXhg" 
+                                                     alt="Profile" class="w-full h-full object-cover">
+                                            </div>
+                                            <div>
+                                                <button type="button" class="px-4 py-2 bg-primary text-white rounded-lg text-sm font-bold hover:bg-primary/90 transition-colors">
+                                                    Change Photo
+                                                </button>
+                                                <p class="text-xs text-slate-400 mt-1">JPG, PNG or GIF. Max 2MB</p>
+                                            </div>
+                                        </div>
+
+                                        <!-- Personal Information -->
+                                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                            <div>
+                                                <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-2">Full Name</label>
+                                                <input type="text" value="<%= user.name %>" class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary">
+                                            </div>
+                                            <div>
+                                                <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-2">Email Address</label>
+                                                <input type="email" value="<%= user.name.toLowerCase().replace(' ', '.') %>@agency.gov.ph" class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary">
+                                            </div>
+                                            <div>
+                                                <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-2">Department</label>
+                                                <input type="text" value="<%= user.department %>" disabled class="w-full px-3 py-2 bg-slate-100 dark:bg-slate-700 border border-slate-200 dark:border-slate-700 rounded-lg text-sm text-slate-500 cursor-not-allowed">
+                                            </div>
+                                            <div>
+                                                <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-2">Position</label>
+                                                <input type="text" value="Department Head" class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary">
+                                            </div>
+                                            <div>
+                                                <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-2">Phone Number</label>
+                                                <input type="tel" value="+63 2 1234 5678" class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary">
+                                            </div>
+                                            <div>
+                                                <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-2">Employee ID</label>
+                                                <input type="text" value="EMP-2024-<%= Math.floor(Math.random() * 1000) %>" disabled class="w-full px-3 py-2 bg-slate-100 dark:bg-slate-700 border border-slate-200 dark:border-slate-700 rounded-lg text-sm text-slate-500 cursor-not-allowed">
+                                            </div>
+                                        </div>
+
+                                        <!-- Office Address -->
+                                        <div>
+                                            <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-2">Office Address</label>
+                                            <textarea rows="3" class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary"><%= user.department %> Department, 3rd Floor, Main Building, Government Center, Diliman, Quezon City</textarea>
+                                        </div>
+
+                                        <!-- Save Button -->
+                                        <div class="flex justify-end gap-3 pt-4 border-t border-slate-100 dark:border-slate-800">
+                                            <button type="button" class="px-4 py-2 text-sm font-medium text-slate-600 dark:text-slate-400 hover:text-primary transition-colors" onclick="cancelChanges()">
+                                                Cancel
+                                            </button>
+                                            <button type="submit" class="px-6 py-2 bg-primary hover:bg-primary/90 text-white rounded-lg text-sm font-bold transition-colors shadow-lg shadow-primary/20">
+                                                Save Changes
+                                            </button>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+
+                            <!-- Notifications Settings Tab -->
+                            <div id="settings-notifications" class="settings-content hidden">
+                                <div class="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 overflow-hidden">
+                                    <div class="p-4 lg:p-6 border-b border-slate-100 dark:border-slate-800">
+                                        <h3 class="text-lg font-bold">Notification Preferences</h3>
+                                        <p class="text-xs lg:text-sm text-slate-500">Choose how you want to receive notifications</p>
+                                    </div>
+                                    
+                                    <div class="p-4 lg:p-6 space-y-6">
+                                        <!-- Email Notifications -->
+                                        <div>
+                                            <h4 class="font-bold text-sm mb-4">Email Notifications</h4>
+                                            <div class="space-y-4">
+                                                <div class="flex items-center justify-between">
+                                                    <div>
+                                                        <p class="text-sm font-medium">New Survey Assignments</p>
+                                                        <p class="text-xs text-slate-500">Receive emails when new surveys are assigned</p>
+                                                    </div>
+                                                    <label class="toggle-switch">
+                                                        <input type="checkbox" checked>
+                                                        <span class="toggle-slider"></span>
+                                                    </label>
+                                                </div>
+                                                <div class="flex items-center justify-between">
+                                                    <div>
+                                                        <p class="text-sm font-medium">Submission Reminders</p>
+                                                        <p class="text-xs text-slate-500">Get reminders before survey deadlines</p>
+                                                    </div>
+                                                    <label class="toggle-switch">
+                                                        <input type="checkbox" checked>
+                                                        <span class="toggle-slider"></span>
+                                                    </label>
+                                                </div>
+                                                <div class="flex items-center justify-between">
+                                                    <div>
+                                                        <p class="text-sm font-medium">Survey Results Available</p>
+                                                        <p class="text-xs text-slate-500">Notifications when survey results are published</p>
+                                                    </div>
+                                                    <label class="toggle-switch">
+                                                        <input type="checkbox">
+                                                        <span class="toggle-slider"></span>
+                                                    </label>
+                                                </div>
+                                                <div class="flex items-center justify-between">
+                                                    <div>
+                                                        <p class="text-sm font-medium">Weekly Digest</p>
+                                                        <p class="text-xs text-slate-500">Weekly summary of your survey activities</p>
+                                                    </div>
+                                                    <label class="toggle-switch">
+                                                        <input type="checkbox" checked>
+                                                        <span class="toggle-slider"></span>
+                                                    </label>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- In-App Notifications -->
+                                        <div class="pt-4 border-t border-slate-100 dark:border-slate-800">
+                                            <h4 class="font-bold text-sm mb-4">In-App Notifications</h4>
+                                            <div class="space-y-4">
+                                                <div class="flex items-center justify-between">
+                                                    <div>
+                                                        <p class="text-sm font-medium">Show Desktop Notifications</p>
+                                                        <p class="text-xs text-slate-500">Receive notifications while using the app</p>
+                                                    </div>
+                                                    <label class="toggle-switch">
+                                                        <input type="checkbox" checked>
+                                                        <span class="toggle-slider"></span>
+                                                    </label>
+                                                </div>
+                                                <div class="flex items-center justify-between">
+                                                    <div>
+                                                        <p class="text-sm font-medium">Sound Alerts</p>
+                                                        <p class="text-xs text-slate-500">Play sound when new notifications arrive</p>
+                                                    </div>
+                                                    <label class="toggle-switch">
+                                                        <input type="checkbox">
+                                                        <span class="toggle-slider"></span>
+                                                    </label>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Notification Schedule -->
+                                        <div class="pt-4 border-t border-slate-100 dark:border-slate-800">
+                                            <h4 class="font-bold text-sm mb-4">Quiet Hours</h4>
+                                            <div class="grid grid-cols-2 gap-4">
+                                                <div>
+                                                    <label class="block text-xs font-medium text-slate-500 mb-1">From</label>
+                                                    <select class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-sm">
+                                                        <option>9:00 PM</option>
+                                                        <option>10:00 PM</option>
+                                                        <option>11:00 PM</option>
+                                                        <option>12:00 AM</option>
+                                                    </select>
+                                                </div>
+                                                <div>
+                                                    <label class="block text-xs font-medium text-slate-500 mb-1">To</label>
+                                                    <select class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-sm">
+                                                        <option>6:00 AM</option>
+                                                        <option>7:00 AM</option>
+                                                        <option>8:00 AM</option>
+                                                        <option>9:00 AM</option>
+                                                    </select>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Save Button -->
+                                        <div class="flex justify-end gap-3 pt-4 border-t border-slate-100 dark:border-slate-800">
+                                            <button type="button" class="px-4 py-2 text-sm font-medium text-slate-600 dark:text-slate-400 hover:text-primary transition-colors">
+                                                Reset
+                                            </button>
+                                            <button type="button" class="px-6 py-2 bg-primary hover:bg-primary/90 text-white rounded-lg text-sm font-bold transition-colors shadow-lg shadow-primary/20">
+                                                Save Preferences
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Security Settings Tab -->
+                            <div id="settings-security" class="settings-content hidden">
+                                <div class="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 overflow-hidden">
+                                    <div class="p-4 lg:p-6 border-b border-slate-100 dark:border-slate-800">
+                                        <h3 class="text-lg font-bold">Security Settings</h3>
+                                        <p class="text-xs lg:text-sm text-slate-500">Manage your password and security preferences</p>
+                                    </div>
+                                    
+                                    <div class="p-4 lg:p-6 space-y-6">
+                                        <!-- Change Password -->
+                                        <div>
+                                            <h4 class="font-bold text-sm mb-4">Change Password</h4>
+                                            <div class="space-y-4">
+                                                <div>
+                                                    <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-2">Current Password</label>
+                                                    <input type="password" class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary">
+                                                </div>
+                                                <div>
+                                                    <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-2">New Password</label>
+                                                    <input type="password" class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary">
+                                                </div>
+                                                <div>
+                                                    <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-2">Confirm New Password</label>
+                                                    <input type="password" class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary">
+                                                </div>
+                                            </div>
+                                            <div class="mt-4">
+                                                <button class="px-6 py-2 bg-primary hover:bg-primary/90 text-white rounded-lg text-sm font-bold transition-colors shadow-lg shadow-primary/20">
+                                                    Update Password
+                                                </button>
+                                            </div>
+                                        </div>
+
+                                        <!-- Two-Factor Authentication -->
+                                        <div class="pt-4 border-t border-slate-100 dark:border-slate-800">
+                                            <div class="flex items-center justify-between">
+                                                <div>
+                                                    <h4 class="font-bold text-sm">Two-Factor Authentication</h4>
+                                                    <p class="text-xs text-slate-500">Add an extra layer of security to your account</p>
+                                                </div>
+                                                <label class="toggle-switch">
+                                                    <input type="checkbox">
+                                                    <span class="toggle-slider"></span>
+                                                </label>
+                                            </div>
+                                        </div>
+
+                                        <!-- Active Sessions -->
+                                        <div class="pt-4 border-t border-slate-100 dark:border-slate-800">
+                                            <h4 class="font-bold text-sm mb-4">Active Sessions</h4>
+                                            <div class="space-y-3">
+                                                <div class="flex items-center justify-between p-3 bg-slate-50 dark:bg-slate-800/50 rounded-lg">
+                                                    <div class="flex items-center gap-3">
+                                                        <span class="material-symbols-outlined text-slate-400">laptop</span>
+                                                        <div>
+                                                            <p class="text-sm font-medium">Windows PC - Chrome</p>
+                                                            <p class="text-xs text-slate-500">Last active: Just now</p>
+                                                        </div>
+                                                    </div>
+                                                    <span class="text-xs font-bold text-emerald-600">Current Device</span>
+                                                </div>
+                                                <div class="flex items-center justify-between p-3 bg-slate-50 dark:bg-slate-800/50 rounded-lg">
+                                                    <div class="flex items-center gap-3">
+                                                        <span class="material-symbols-outlined text-slate-400">smartphone</span>
+                                                        <div>
+                                                            <p class="text-sm font-medium">iPhone 14 - Safari</p>
+                                                            <p class="text-xs text-slate-500">Last active: 2 days ago</p>
+                                                        </div>
+                                                    </div>
+                                                    <button class="text-xs text-red-600 hover:text-red-700 font-medium">
+                                                        Revoke
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Login History -->
+                                        <div class="pt-4 border-t border-slate-100 dark:border-slate-800">
+                                            <h4 class="font-bold text-sm mb-4">Recent Login Activity</h4>
+                                            <div class="space-y-2 text-sm">
+                                                <div class="flex justify-between">
+                                                    <span class="text-slate-600 dark:text-slate-400">Today, 09:30 AM</span>
+                                                    <span class="font-medium">Windows PC · Manila</span>
+                                                </div>
+                                                <div class="flex justify-between">
+                                                    <span class="text-slate-600 dark:text-slate-400">Yesterday, 06:15 PM</span>
+                                                    <span class="font-medium">iPhone · Manila</span>
+                                                </div>
+                                                <div class="flex justify-between">
+                                                    <span class="text-slate-600 dark:text-slate-400">Mar 5, 2024, 10:45 AM</span>
+                                                    <span class="font-medium">Windows PC · Manila</span>
+                                                </div>
+                                            </div>
+                                            <button class="mt-4 text-primary text-sm font-medium hover:underline">
+                                                View Full History
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Preferences Tab -->
+                            <div id="settings-preferences" class="settings-content hidden">
+                                <div class="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 overflow-hidden">
+                                    <div class="p-4 lg:p-6 border-b border-slate-100 dark:border-slate-800">
+                                        <h3 class="text-lg font-bold">Preferences</h3>
+                                        <p class="text-xs lg:text-sm text-slate-500">Customize your application experience</p>
+                                    </div>
+                                    
+                                    <div class="p-4 lg:p-6 space-y-6">
+                                        <!-- Theme -->
+                                        <div>
+                                            <h4 class="font-bold text-sm mb-4">Appearance</h4>
+                                            <div class="grid grid-cols-3 gap-3">
+                                                <button class="p-3 border-2 border-primary bg-primary/5 rounded-lg text-center">
+                                                    <span class="material-symbols-outlined text-primary mb-1">light_mode</span>
+                                                    <span class="text-xs font-medium block">Light</span>
+                                                </button>
+                                                <button class="p-3 border-2 border-slate-200 dark:border-slate-700 rounded-lg text-center hover:bg-slate-50">
+                                                    <span class="material-symbols-outlined text-slate-600 dark:text-slate-400 mb-1">dark_mode</span>
+                                                    <span class="text-xs font-medium block">Dark</span>
+                                                </button>
+                                                <button class="p-3 border-2 border-slate-200 dark:border-slate-700 rounded-lg text-center hover:bg-slate-50">
+                                                    <span class="material-symbols-outlined text-slate-600 dark:text-slate-400 mb-1">settings_suggest</span>
+                                                    <span class="text-xs font-medium block">System</span>
+                                                </button>
+                                            </div>
+                                        </div>
+
+                                        <!-- Language -->
+                                        <div class="pt-4 border-t border-slate-100 dark:border-slate-800">
+                                            <h4 class="font-bold text-sm mb-4">Language</h4>
+                                            <select class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-sm">
+                                                <option>English (US)</option>
+                                                <option>Filipino</option>
+                                                <option>English (UK)</option>
+                                            </select>
+                                        </div>
+
+                                        <!-- Date Format -->
+                                        <div class="pt-4 border-t border-slate-100 dark:border-slate-800">
+                                            <h4 class="font-bold text-sm mb-4">Date & Time Format</h4>
+                                            <div class="grid grid-cols-2 gap-4">
+                                                <div>
+                                                    <label class="block text-xs font-medium text-slate-500 mb-1">Date Format</label>
+                                                    <select class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-sm">
+                                                        <option>MM/DD/YYYY</option>
+                                                        <option>DD/MM/YYYY</option>
+                                                        <option>YYYY-MM-DD</option>
+                                                    </select>
+                                                </div>
+                                                <div>
+                                                    <label class="block text-xs font-medium text-slate-500 mb-1">Time Format</label>
+                                                    <select class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-sm">
+                                                        <option>12-hour (AM/PM)</option>
+                                                        <option>24-hour</option>
+                                                    </select>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Dashboard Layout -->
+                                        <div class="pt-4 border-t border-slate-100 dark:border-slate-800">
+                                            <h4 class="font-bold text-sm mb-4">Default Dashboard View</h4>
+                                            <div class="space-y-2">
+                                                <label class="flex items-center gap-2">
+                                                    <input type="radio" name="dashboard-view" checked class="text-primary">
+                                                    <span class="text-sm">Compact View (show more cards)</span>
+                                                </label>
+                                                <label class="flex items-center gap-2">
+                                                    <input type="radio" name="dashboard-view" class="text-primary">
+                                                    <span class="text-sm">Detailed View (show full information)</span>
+                                                </label>
+                                            </div>
+                                        </div>
+
+                                        <!-- Save Button -->
+                                        <div class="flex justify-end gap-3 pt-4 border-t border-slate-100 dark:border-slate-800">
+                                            <button type="button" class="px-4 py-2 text-sm font-medium text-slate-600 dark:text-slate-400 hover:text-primary transition-colors">
+                                                Reset to Default
+                                            </button>
+                                            <button type="button" class="px-6 py-2 bg-primary hover:bg-primary/90 text-white rounded-lg text-sm font-bold transition-colors shadow-lg shadow-primary/20">
+                                                Save Preferences
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Privacy Tab -->
+                            <div id="settings-privacy" class="settings-content hidden">
+                                <div class="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 overflow-hidden">
+                                    <div class="p-4 lg:p-6 border-b border-slate-100 dark:border-slate-800">
+                                        <h3 class="text-lg font-bold">Privacy Settings</h3>
+                                        <p class="text-xs lg:text-sm text-slate-500">Control your privacy and data sharing preferences</p>
+                                    </div>
+                                    
+                                    <div class="p-4 lg:p-6 space-y-6">
+                                        <!-- Profile Visibility -->
+                                        <div>
+                                            <h4 class="font-bold text-sm mb-4">Profile Visibility</h4>
+                                            <div class="space-y-3">
+                                                <div class="flex items-center justify-between">
+                                                    <div>
+                                                        <p class="text-sm font-medium">Show my profile to other department heads</p>
+                                                        <p class="text-xs text-slate-500">Your name and department will be visible</p>
+                                                    </div>
+                                                    <label class="toggle-switch">
+                                                        <input type="checkbox" checked>
+                                                        <span class="toggle-slider"></span>
+                                                    </label>
+                                                </div>
+                                                <div class="flex items-center justify-between">
+                                                    <div>
+                                                        <p class="text-sm font-medium">Show my survey activity</p>
+                                                        <p class="text-xs text-slate-500">Let others see your completed surveys</p>
+                                                    </div>
+                                                    <label class="toggle-switch">
+                                                        <input type="checkbox">
+                                                        <span class="toggle-slider"></span>
+                                                    </label>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Data Sharing -->
+                                        <div class="pt-4 border-t border-slate-100 dark:border-slate-800">
+                                            <h4 class="font-bold text-sm mb-4">Data Sharing</h4>
+                                            <div class="space-y-3">
+                                                <div class="flex items-center justify-between">
+                                                    <div>
+                                                        <p class="text-sm font-medium">Anonymous usage data</p>
+                                                        <p class="text-xs text-slate-500">Help improve BAICS by sharing anonymous usage data</p>
+                                                    </div>
+                                                    <label class="toggle-switch">
+                                                        <input type="checkbox" checked>
+                                                        <span class="toggle-slider"></span>
+                                                    </label>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Download Data -->
+                                        <div class="pt-4 border-t border-slate-100 dark:border-slate-800">
+                                            <h4 class="font-bold text-sm mb-4">Your Data</h4>
+                                            <button class="px-4 py-2 border border-slate-200 dark:border-slate-700 rounded-lg text-sm font-medium hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
+                                                Download My Data
+                                            </button>
+                                            <p class="text-xs text-slate-400 mt-2">Get a copy of all your survey responses and account data</p>
+                                        </div>
+
+                                        <!-- Delete Account -->
+                                        <div class="pt-4 border-t border-slate-100 dark:border-slate-800">
+                                            <h4 class="font-bold text-sm text-red-600 dark:text-red-400 mb-4">Danger Zone</h4>
+                                            <div class="bg-red-50 dark:bg-red-900/10 border border-red-200 dark:border-red-800 rounded-lg p-4">
+                                                <p class="text-sm font-medium text-red-800 dark:text-red-400 mb-2">Delete Account</p>
+                                                <p class="text-xs text-red-600 dark:text-red-400 mb-3">Once you delete your account, there is no going back. Please be certain.</p>
+                                                <button class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg text-sm font-bold transition-colors">
+                                                    Delete Account
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Settings Tab Switching Script -->
+    <script>
+        function showSettingsTab(tabName) {
+            // Hide all content
+            document.querySelectorAll('.settings-content').forEach(content => {
+                content.classList.add('hidden');
+            });
+            
+            // Remove active class from all tabs
+            document.querySelectorAll('.settings-tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            // Show selected content
+            document.getElementById(`settings-${tabName}`).classList.remove('hidden');
+            
+            // Add active class to selected tab
+            document.getElementById(`tab-${tabName}`).classList.add('active');
+        }
+
+        function cancelChanges() {
+            if (confirm('Discard unsaved changes?')) {
+                // Reset form or redirect
+                window.location.reload();
+            }
+        }
+    </script>
+
+    <!-- Scripts -->
+    <%- include('../partials/scripts') %>
+</body>
+</html>

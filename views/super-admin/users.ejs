@@ -1,0 +1,985 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <%- include('../partials/head', { title: 'User Management' }) %>
+    <style>
+        .role-badge {
+            padding: 4px 10px;
+            border-radius: 30px;
+            font-size: 11px;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .role-super-admin {
+            background: linear-gradient(135deg, #1d3e8b 0%, #2a4a9c 100%);
+            color: white;
+        }
+        .role-admin {
+            background: #e2e8f0;
+            color: #1d3e8b;
+        }
+        .role-office-head {
+            background: #e6f7e6;
+            color: #0d6632;
+        }
+        .status-badge {
+            padding: 4px 8px;
+            border-radius: 30px;
+            font-size: 11px;
+            font-weight: 500;
+        }
+        .status-active {
+            background: #dcfce7;
+            color: #166534;
+        }
+        .status-inactive {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+        .status-pending {
+            background: #fef3c7;
+            color: #92400e;
+        }
+        .user-row {
+            transition: all 0.2s ease;
+        }
+        .user-row:hover {
+            background: #f8fafc;
+        }
+        .action-btn {
+            padding: 6px;
+            border-radius: 8px;
+            color: #64748b;
+            transition: all 0.2s;
+        }
+        .action-btn:hover {
+            background: #f1f5f9;
+            color: #1d3e8b;
+        }
+        .action-btn.delete:hover {
+            background: #fee2e2;
+            color: #dc2626;
+        }
+        .tab-button {
+            padding: 10px 16px;
+            font-weight: 500;
+            font-size: 14px;
+            border-bottom: 2px solid transparent;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .tab-button.active {
+            border-bottom-color: #1d3e8b;
+            color: #1d3e8b;
+            font-weight: 600;
+        }
+        .tab-button:hover:not(.active) {
+            color: #1d3e8b;
+            background: #f8fafc;
+        }
+        .filter-pill {
+            padding: 6px 14px;
+            border-radius: 30px;
+            font-size: 12px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: 1px solid #e2e8f0;
+        }
+        .filter-pill.active {
+            background: #1d3e8b;
+            color: white;
+            border-color: #1d3e8b;
+        }
+        .filter-pill:hover:not(.active) {
+            background: #f1f5f9;
+        }
+        .modal {
+            transition: opacity 0.2s ease;
+        }
+        .modal.hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body class="bg-[#f8fafc] dark:bg-background-dark font-display">
+    <!-- Mobile Menu Overlay -->
+    <div id="mobileMenuOverlay" class="fixed inset-0 bg-black/50 z-40 hidden lg:hidden"></div>
+
+    <div class="flex h-screen overflow-hidden">
+        <!-- Sidebar -->
+        <%- include('../partials/sidebar', { 
+            role: 'super-admin', 
+            currentPage: 'users',
+            user: user 
+        }) %>
+
+        <!-- Main Content -->
+        <main class="flex-1 flex flex-col min-w-0 h-screen overflow-hidden bg-[#f8fafc] dark:bg-background-dark">
+            <!-- Header -->
+            <%- include('../partials/header', { 
+                role: 'super-admin', 
+                pageTitle: 'User Management',
+                user: user 
+            }) %>
+
+            <!-- Scrollable Content -->
+            <div class="flex-1 overflow-y-auto custom-scrollbar p-6 lg:p-8">
+                <div class="max-w-7xl mx-auto">
+                    <!-- Header with Actions -->
+                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+                        <div>
+                            <h1 class="text-2xl lg:text-3xl font-bold text-slate-800">User Management</h1>
+                            <p class="text-sm text-slate-500 mt-1">Manage all system users including admins and office heads</p>
+                        </div>
+                        <div class="flex gap-3">
+                            <button class="px-4 py-2 border border-slate-300 rounded-lg text-sm font-medium hover:bg-slate-50 flex items-center gap-2" onclick="exportUsers()">
+                                <span class="material-symbols-outlined text-sm">download</span>
+                                Export
+                            </button>
+                            <button class="px-4 py-2 bg-primary text-white rounded-lg text-sm font-semibold flex items-center gap-2 shadow-md hover:bg-primary/90" onclick="openAddModal()">
+                                <span class="material-symbols-outlined text-sm">add</span>
+                                Add User
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Stats Cards -->
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+                        <div class="bg-white rounded-xl border border-slate-200 p-5">
+                            <div class="flex items-center justify-between mb-2">
+                                <span class="text-sm text-slate-500">Total Users</span>
+                                <span class="material-symbols-outlined text-primary">groups</span>
+                            </div>
+                            <p class="text-2xl font-bold">42</p>
+                            <div class="flex items-center gap-2 mt-2 text-xs">
+                                <span class="text-slate-400">Admins:</span>
+                                <span class="font-medium">6</span>
+                                <span class="text-slate-400 ml-2">Office Heads:</span>
+                                <span class="font-medium">36</span>
+                            </div>
+                        </div>
+                        
+                        <div class="bg-white rounded-xl border border-slate-200 p-5">
+                            <div class="flex items-center justify-between mb-2">
+                                <span class="text-sm text-slate-500">Active</span>
+                                <span class="material-symbols-outlined text-emerald-600">check_circle</span>
+                            </div>
+                            <p class="text-2xl font-bold text-emerald-600">38</p>
+                            <p class="text-xs text-slate-400 mt-2">90% active rate</p>
+                        </div>
+                        
+                        <div class="bg-white rounded-xl border border-slate-200 p-5">
+                            <div class="flex items-center justify-between mb-2">
+                                <span class="text-sm text-slate-500">Pending</span>
+                                <span class="material-symbols-outlined text-amber-600">pending</span>
+                            </div>
+                            <p class="text-2xl font-bold text-amber-600">3</p>
+                            <p class="text-xs text-slate-400 mt-2">Awaiting activation</p>
+                        </div>
+                        
+                        <div class="bg-white rounded-xl border border-slate-200 p-5">
+                            <div class="flex items-center justify-between mb-2">
+                                <span class="text-sm text-slate-500">Inactive</span>
+                                <span class="material-symbols-outlined text-red-600">pause_circle</span>
+                            </div>
+                            <p class="text-2xl font-bold text-red-600">1</p>
+                            <p class="text-xs text-slate-400 mt-2">Temporarily disabled</p>
+                        </div>
+                    </div>
+
+                    <!-- Tabs -->
+                    <div class="border-b border-slate-200 mb-6">
+                        <div class="flex gap-6">
+                            <button class="tab-button active" onclick="switchTab('all')" id="tab-all">All Users</button>
+                            <button class="tab-button" onclick="switchTab('admins')" id="tab-admins">Admins</button>
+                            <button class="tab-button" onclick="switchTab('office-heads')" id="tab-office-heads">Office Heads</button>
+                        </div>
+                    </div>
+
+                    <!-- Filters and Search -->
+                    <div class="bg-white rounded-xl border border-slate-200 p-4 mb-6">
+                        <div class="flex flex-col lg:flex-row gap-4">
+                            <!-- Search -->
+                            <div class="flex-1 relative">
+                                <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">search</span>
+                                <input type="text" class="w-full pl-10 pr-4 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary" 
+                                       placeholder="Search by name, email, or department..." id="searchInput">
+                            </div>
+                            
+                            <!-- Role Filter -->
+                            <select class="px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20" id="roleFilter" onchange="filterByRole(this.value)">
+                                <option value="all">All Roles</option>
+                                <option value="admin">Admin</option>
+                                <option value="office-head">Office Head</option>
+                            </select>
+                            
+                            <!-- Status Filter -->
+                            <div class="flex gap-2">
+                                <span class="filter-pill active" onclick="filterByStatus('all')" id="status-all">All</span>
+                                <span class="filter-pill" onclick="filterByStatus('active')" id="status-active">Active</span>
+                                <span class="filter-pill" onclick="filterByStatus('pending')" id="status-pending">Pending</span>
+                                <span class="filter-pill" onclick="filterByStatus('inactive')" id="status-inactive">Inactive</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Users Table -->
+                    <div class="bg-white rounded-xl border border-slate-200 overflow-hidden">
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-sm">
+                                <thead class="bg-slate-50 border-b border-slate-200">
+                                    <tr>
+                                        <th class="px-6 py-4 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">User</th>
+                                        <th class="px-6 py-4 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Role</th>
+                                        <th class="px-6 py-4 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Department</th>
+                                        <th class="px-6 py-4 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Status</th>
+                                        <th class="px-6 py-4 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Last Active</th>
+                                        <th class="px-6 py-4 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Created</th>
+                                        <th class="px-6 py-4 text-right text-xs font-semibold text-slate-500 uppercase tracking-wider">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-slate-200" id="usersTable">
+                                    <!-- Super Admin (hidden from management) -->
+                                    <tr class="user-row opacity-75 bg-slate-50" data-role="super-admin" data-status="active">
+                                        <td class="px-6 py-4">
+                                            <div class="flex items-center gap-3">
+                                                <div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-white">
+                                                    <span class="material-symbols-outlined text-sm">shield</span>
+                                                </div>
+                                                <div>
+                                                    <p class="font-medium">Adrian Thorne <span class="text-xs text-slate-400 ml-1">(You)</span></p>
+                                                    <p class="text-xs text-slate-500">adrian.thorne@agency.gov.ph</p>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td class="px-6 py-4">
+                                            <span class="role-badge role-super-admin">
+                                                <span class="material-symbols-outlined text-xs">security</span>
+                                                Super Admin
+                                            </span>
+                                        </td>
+                                        <td class="px-6 py-4 text-sm">System Management</td>
+                                        <td class="px-6 py-4">
+                                            <span class="status-badge status-active">Active</span>
+                                        </td>
+                                        <td class="px-6 py-4 text-sm">Now</td>
+                                        <td class="px-6 py-4 text-sm">System</td>
+                                        <td class="px-6 py-4 text-right">
+                                            <span class="text-xs text-slate-400">Cannot modify</span>
+                                        </td>
+                                    </tr>
+
+                                    <!-- Admin 1 -->
+                                    <tr class="user-row" data-role="admin" data-status="active">
+                                        <td class="px-6 py-4">
+                                            <div class="flex items-center gap-3">
+                                                <div class="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary">
+                                                    <span class="material-symbols-outlined text-sm">admin_panel_settings</span>
+                                                </div>
+                                                <div>
+                                                    <p class="font-medium">Maria Santos</p>
+                                                    <p class="text-xs text-slate-500">maria.santos@agency.gov.ph</p>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td class="px-6 py-4">
+                                            <span class="role-badge role-admin">Admin</span>
+                                        </td>
+                                        <td class="px-6 py-4 text-sm">Top Management</td>
+                                        <td class="px-6 py-4">
+                                            <span class="status-badge status-active">Active</span>
+                                        </td>
+                                        <td class="px-6 py-4 text-sm">2 hours ago</td>
+                                        <td class="px-6 py-4 text-sm">Jan 15, 2024</td>
+                                        <td class="px-6 py-4 text-right">
+                                            <button class="action-btn" onclick="viewUser(1)" title="View">
+                                                <span class="material-symbols-outlined text-sm">visibility</span>
+                                            </button>
+                                            <button class="action-btn" onclick="editUser(1)" title="Edit">
+                                                <span class="material-symbols-outlined text-sm">edit</span>
+                                            </button>
+                                            <button class="action-btn" onclick="resetPassword(1)" title="Reset Password">
+                                                <span class="material-symbols-outlined text-sm">key</span>
+                                            </button>
+                                            <button class="action-btn delete" onclick="toggleUserStatus(1)" title="Deactivate">
+                                                <span class="material-symbols-outlined text-sm">pause</span>
+                                            </button>
+                                        </td>
+                                    </tr>
+
+                                    <!-- Admin 2 -->
+                                    <tr class="user-row" data-role="admin" data-status="active">
+                                        <td class="px-6 py-4">
+                                            <div class="flex items-center gap-3">
+                                                <div class="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary">
+                                                    <span class="material-symbols-outlined text-sm">admin_panel_settings</span>
+                                                </div>
+                                                <div>
+                                                    <p class="font-medium">John Reyes</p>
+                                                    <p class="text-xs text-slate-500">john.reyes@agency.gov.ph</p>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td class="px-6 py-4">
+                                            <span class="role-badge role-admin">Admin</span>
+                                        </td>
+                                        <td class="px-6 py-4 text-sm">Finance & Accounting</td>
+                                        <td class="px-6 py-4">
+                                            <span class="status-badge status-active">Active</span>
+                                        </td>
+                                        <td class="px-6 py-4 text-sm">1 day ago</td>
+                                        <td class="px-6 py-4 text-sm">Feb 3, 2024</td>
+                                        <td class="px-6 py-4 text-right">
+                                            <button class="action-btn" onclick="viewUser(2)">
+                                                <span class="material-symbols-outlined text-sm">visibility</span>
+                                            </button>
+                                            <button class="action-btn" onclick="editUser(2)">
+                                                <span class="material-symbols-outlined text-sm">edit</span>
+                                            </button>
+                                            <button class="action-btn" onclick="resetPassword(2)">
+                                                <span class="material-symbols-outlined text-sm">key</span>
+                                            </button>
+                                            <button class="action-btn delete" onclick="toggleUserStatus(2)">
+                                                <span class="material-symbols-outlined text-sm">pause</span>
+                                            </button>
+                                        </td>
+                                    </tr>
+
+                                    <!-- Office Head 1 -->
+                                    <tr class="user-row" data-role="office-head" data-status="active">
+                                        <td class="px-6 py-4">
+                                            <div class="flex items-center gap-3">
+                                                <div class="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center text-green-700">
+                                                    <span class="material-symbols-outlined text-sm">person</span>
+                                                </div>
+                                                <div>
+                                                    <p class="font-medium">Juan Dela Cruz</p>
+                                                    <p class="text-xs text-slate-500">juan.delacruz@agency.gov.ph</p>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td class="px-6 py-4">
+                                            <span class="role-badge role-office-head">Office Head</span>
+                                        </td>
+                                        <td class="px-6 py-4 text-sm">Finance & Accounting</td>
+                                        <td class="px-6 py-4">
+                                            <span class="status-badge status-active">Active</span>
+                                        </td>
+                                        <td class="px-6 py-4 text-sm">Yesterday</td>
+                                        <td class="px-6 py-4 text-sm">Mar 10, 2024</td>
+                                        <td class="px-6 py-4 text-right">
+                                            <button class="action-btn" onclick="viewUser(3)">
+                                                <span class="material-symbols-outlined text-sm">visibility</span>
+                                            </button>
+                                            <button class="action-btn" onclick="editUser(3)">
+                                                <span class="material-symbols-outlined text-sm">edit</span>
+                                            </button>
+                                            <button class="action-btn" onclick="resetPassword(3)">
+                                                <span class="material-symbols-outlined text-sm">key</span>
+                                            </button>
+                                            <button class="action-btn delete" onclick="toggleUserStatus(3)">
+                                                <span class="material-symbols-outlined text-sm">pause</span>
+                                            </button>
+                                        </td>
+                                    </tr>
+
+                                    <!-- Office Head 2 - Pending -->
+                                    <tr class="user-row" data-role="office-head" data-status="pending">
+                                        <td class="px-6 py-4">
+                                            <div class="flex items-center gap-3">
+                                                <div class="w-8 h-8 rounded-full bg-amber-100 flex items-center justify-center text-amber-700">
+                                                    <span class="material-symbols-outlined text-sm">person</span>
+                                                </div>
+                                                <div>
+                                                    <p class="font-medium">Anna Reyes</p>
+                                                    <p class="text-xs text-slate-500">anna.reyes@agency.gov.ph</p>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td class="px-6 py-4">
+                                            <span class="role-badge role-office-head">Office Head</span>
+                                        </td>
+                                        <td class="px-6 py-4 text-sm">Human Resources</td>
+                                        <td class="px-6 py-4">
+                                            <span class="status-badge status-pending">Pending</span>
+                                        </td>
+                                        <td class="px-6 py-4 text-sm text-slate-400">Never</td>
+                                        <td class="px-6 py-4 text-sm">Apr 5, 2024</td>
+                                        <td class="px-6 py-4 text-right">
+                                            <button class="action-btn" onclick="viewUser(4)">
+                                                <span class="material-symbols-outlined text-sm">visibility</span>
+                                            </button>
+                                            <button class="action-btn" onclick="editUser(4)">
+                                                <span class="material-symbols-outlined text-sm">edit</span>
+                                            </button>
+                                            <button class="action-btn" onclick="resendInvite(4)" title="Resend Invite">
+                                                <span class="material-symbols-outlined text-sm">mail</span>
+                                            </button>
+                                            <button class="action-btn" onclick="activateNow(4)" title="Activate Now">
+                                                <span class="material-symbols-outlined text-sm">bolt</span>
+                                            </button>
+                                        </td>
+                                    </tr>
+
+                                    <!-- Office Head 3 - Inactive -->
+                                    <tr class="user-row" data-role="office-head" data-status="inactive">
+                                        <td class="px-6 py-4">
+                                            <div class="flex items-center gap-3">
+                                                <div class="w-8 h-8 rounded-full bg-red-100 flex items-center justify-center text-red-700">
+                                                    <span class="material-symbols-outlined text-sm">person_off</span>
+                                                </div>
+                                                <div>
+                                                    <p class="font-medium">Michael Tan</p>
+                                                    <p class="text-xs text-slate-500">michael.tan@agency.gov.ph</p>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td class="px-6 py-4">
+                                            <span class="role-badge role-office-head">Office Head</span>
+                                        </td>
+                                        <td class="px-6 py-4 text-sm">IT Department</td>
+                                        <td class="px-6 py-4">
+                                            <span class="status-badge status-inactive">Inactive</span>
+                                        </td>
+                                        <td class="px-6 py-4 text-sm">Mar 15, 2024</td>
+                                        <td class="px-6 py-4 text-sm">Jan 20, 2024</td>
+                                        <td class="px-6 py-4 text-right">
+                                            <button class="action-btn" onclick="viewUser(5)">
+                                                <span class="material-symbols-outlined text-sm">visibility</span>
+                                            </button>
+                                            <button class="action-btn" onclick="editUser(5)">
+                                                <span class="material-symbols-outlined text-sm">edit</span>
+                                            </button>
+                                            <button class="action-btn" onclick="reactivateUser(5)" title="Reactivate">
+                                                <span class="material-symbols-outlined text-sm">play_arrow</span>
+                                            </button>
+                                            <button class="action-btn delete" onclick="deleteUser(5)" title="Delete">
+                                                <span class="material-symbols-outlined text-sm">delete</span>
+                                            </button>
+                                        </td>
+                                    </tr>
+
+                                    <!-- Office Head 4 -->
+                                    <tr class="user-row" data-role="office-head" data-status="active">
+                                        <td class="px-6 py-4">
+                                            <div class="flex items-center gap-3">
+                                                <div class="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center text-green-700">
+                                                    <span class="material-symbols-outlined text-sm">person</span>
+                                                </div>
+                                                <div>
+                                                    <p class="font-medium">Carla Mercado</p>
+                                                    <p class="text-xs text-slate-500">carla.mercado@agency.gov.ph</p>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td class="px-6 py-4">
+                                            <span class="role-badge role-office-head">Office Head</span>
+                                        </td>
+                                        <td class="px-6 py-4 text-sm">Operations</td>
+                                        <td class="px-6 py-4">
+                                            <span class="status-badge status-active">Active</span>
+                                        </td>
+                                        <td class="px-6 py-4 text-sm">Today</td>
+                                        <td class="px-6 py-4 text-sm">Feb 28, 2024</td>
+                                        <td class="px-6 py-4 text-right">
+                                            <button class="action-btn" onclick="viewUser(6)">
+                                                <span class="material-symbols-outlined text-sm">visibility</span>
+                                            </button>
+                                            <button class="action-btn" onclick="editUser(6)">
+                                                <span class="material-symbols-outlined text-sm">edit</span>
+                                            </button>
+                                            <button class="action-btn" onclick="resetPassword(6)">
+                                                <span class="material-symbols-outlined text-sm">key</span>
+                                            </button>
+                                            <button class="action-btn delete" onclick="toggleUserStatus(6)">
+                                                <span class="material-symbols-outlined text-sm">pause</span>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        
+                        <!-- Pagination -->
+                        <div class="px-6 py-4 border-t border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-4">
+                            <p class="text-sm text-slate-500">Showing 1 to 7 of 42 users</p>
+                            <div class="flex gap-2">
+                                <button class="px-3 py-1 border border-slate-300 rounded text-sm disabled:opacity-50" disabled>Previous</button>
+                                <button class="px-3 py-1 bg-primary text-white rounded text-sm">1</button>
+                                <button class="px-3 py-1 border border-slate-300 rounded text-sm hover:bg-slate-50">2</button>
+                                <button class="px-3 py-1 border border-slate-300 rounded text-sm hover:bg-slate-50">3</button>
+                                <button class="px-3 py-1 border border-slate-300 rounded text-sm hover:bg-slate-50">4</button>
+                                <button class="px-3 py-1 border border-slate-300 rounded text-sm hover:bg-slate-50">Next</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Add/Edit User Modal -->
+    <div id="userModal" class="fixed inset-0 bg-black/50 z-50 hidden flex items-center justify-center modal">
+        <div class="bg-white rounded-xl max-w-3xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+            <div class="p-6 border-b border-slate-200 flex justify-between items-center sticky top-0 bg-white">
+                <h2 class="text-xl font-bold" id="modalTitle">Add New User</h2>
+                <button class="p-1 hover:bg-slate-100 rounded" onclick="closeModal()">
+                    <span class="material-symbols-outlined">close</span>
+                </button>
+            </div>
+            
+            <div class="p-6">
+                <form id="userForm">
+                    <!-- User Role Selection -->
+                    <div class="mb-6">
+                        <h3 class="text-sm font-semibold text-primary mb-3">User Role</h3>
+                        <div class="flex gap-4">
+                            <label class="flex items-center gap-2 p-3 border rounded-lg cursor-pointer hover:border-primary flex-1">
+                                <input type="radio" name="role" value="admin" class="text-primary" checked>
+                                <div>
+                                    <span class="font-medium block">Admin</span>
+                                    <span class="text-xs text-slate-500">Can manage surveys and office heads</span>
+                                </div>
+                            </label>
+                            <label class="flex items-center gap-2 p-3 border rounded-lg cursor-pointer hover:border-primary flex-1">
+                                <input type="radio" name="role" value="office-head" class="text-primary">
+                                <div>
+                                    <span class="font-medium block">Office Head</span>
+                                    <span class="text-xs text-slate-500">Can complete surveys only</span>
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Basic Information -->
+                    <div class="mb-6">
+                        <h3 class="text-sm font-semibold text-primary mb-3">Basic Information</h3>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-slate-700 mb-1">First Name</label>
+                                <input type="text" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm" placeholder="Enter first name">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-slate-700 mb-1">Last Name</label>
+                                <input type="text" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm" placeholder="Enter last name">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Account Information -->
+                    <div class="mb-6">
+                        <h3 class="text-sm font-semibold text-primary mb-3">Account Information</h3>
+                        <div class="space-y-4">
+                            <div>
+                                <label class="block text-sm font-medium text-slate-700 mb-1">Email Address</label>
+                                <input type="email" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm" placeholder="email@agency.gov.ph">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-slate-700 mb-1">Username</label>
+                                <input type="text" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm" placeholder="username">
+                            </div>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-sm font-medium text-slate-700 mb-1">Password</label>
+                                    <input type="password" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm" placeholder="••••••••">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-slate-700 mb-1">Confirm Password</label>
+                                    <input type="password" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm" placeholder="••••••••">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Department Information (for Office Heads) -->
+                    <div class="mb-6" id="deptFields">
+                        <h3 class="text-sm font-semibold text-primary mb-3">Department Information</h3>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-slate-700 mb-1">Department</label>
+                                <select class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm">
+                                    <option value="">Select Department</option>
+                                    <option value="TM">Top Management</option>
+                                    <option value="FIN">Finance & Accounting</option>
+                                    <option value="HR">Human Resources</option>
+                                    <option value="IT">IT Department</option>
+                                    <option value="OPS">Operations</option>
+                                    <option value="LEGAL">Legal Affairs</option>
+                                    <option value="PROC">Procurement</option>
+                                    <option value="AUDIT">Internal Audit</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-slate-700 mb-1">Position/Title</label>
+                                <input type="text" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm" placeholder="e.g., Department Head">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Account Status -->
+                    <div class="mb-6">
+                        <h3 class="text-sm font-semibold text-primary mb-3">Account Status</h3>
+                        <div class="flex items-center gap-6">
+                            <label class="flex items-center gap-2">
+                                <input type="radio" name="status" value="active" class="text-primary" checked>
+                                <span class="text-sm">Active</span>
+                            </label>
+                            <label class="flex items-center gap-2">
+                                <input type="radio" name="status" value="pending" class="text-primary">
+                                <span class="text-sm">Pending (send invite)</span>
+                            </label>
+                            <label class="flex items-center gap-2">
+                                <input type="radio" name="status" value="inactive" class="text-primary">
+                                <span class="text-sm">Inactive</span>
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <!-- Send Notification -->
+                    <div class="mb-6">
+                        <label class="flex items-center gap-2">
+                            <input type="checkbox" class="text-primary rounded" checked>
+                            <span class="text-sm">Send welcome email with login credentials</span>
+                        </label>
+                    </div>
+                </form>
+            </div>
+            
+            <div class="p-6 border-t border-slate-200 flex justify-end gap-3">
+                <button class="px-4 py-2 border border-slate-300 rounded-lg text-sm font-medium hover:bg-slate-50" onclick="closeModal()">
+                    Cancel
+                </button>
+                <button class="px-4 py-2 bg-primary text-white rounded-lg text-sm font-semibold hover:bg-primary/90" onclick="saveUser()">
+                    Create User
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- View User Modal -->
+    <div id="viewUserModal" class="fixed inset-0 bg-black/50 z-50 hidden flex items-center justify-center modal">
+        <div class="bg-white rounded-xl max-w-2xl w-full mx-4">
+            <div class="p-6 border-b border-slate-200 flex justify-between items-center">
+                <h2 class="text-xl font-bold">User Details</h2>
+                <button class="p-1 hover:bg-slate-100 rounded" onclick="closeViewModal()">
+                    <span class="material-symbols-outlined">close</span>
+                </button>
+            </div>
+            
+            <div class="p-6">
+                <div class="flex items-center gap-4 mb-6">
+                    <div class="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center text-primary">
+                        <span class="material-symbols-outlined text-3xl">person</span>
+                    </div>
+                    <div>
+                        <h3 class="text-xl font-bold" id="viewName">Maria Santos</h3>
+                        <p class="text-slate-500" id="viewEmail">maria.santos@agency.gov.ph</p>
+                    </div>
+                    <span class="role-badge role-admin ml-auto" id="viewRole">Admin</span>
+                </div>
+                
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="bg-slate-50 p-3 rounded-lg">
+                        <p class="text-xs text-slate-500">Department</p>
+                        <p class="font-medium" id="viewDept">Top Management</p>
+                    </div>
+                    <div class="bg-slate-50 p-3 rounded-lg">
+                        <p class="text-xs text-slate-500">Position</p>
+                        <p class="font-medium" id="viewPosition">Admin</p>
+                    </div>
+                    <div class="bg-slate-50 p-3 rounded-lg">
+                        <p class="text-xs text-slate-500">Username</p>
+                        <p class="font-medium" id="viewUsername">maria.santos</p>
+                    </div>
+                    <div class="bg-slate-50 p-3 rounded-lg">
+                        <p class="text-xs text-slate-500">Status</p>
+                        <p class="font-medium text-emerald-600" id="viewStatus">Active</p>
+                    </div>
+                    <div class="bg-slate-50 p-3 rounded-lg">
+                        <p class="text-xs text-slate-500">Last Active</p>
+                        <p class="font-medium" id="viewLastActive">2 hours ago</p>
+                    </div>
+                    <div class="bg-slate-50 p-3 rounded-lg">
+                        <p class="text-xs text-slate-500">Member Since</p>
+                        <p class="font-medium" id="viewCreated">Jan 15, 2024</p>
+                    </div>
+                </div>
+                
+                <!-- Admin Permissions Summary -->
+                <div class="mt-6">
+                    <h4 class="font-medium mb-3">Permissions</h4>
+                    <div class="space-y-2">
+                        <div class="flex items-center gap-2 text-sm">
+                            <span class="material-symbols-outlined text-green-600 text-sm">check_circle</span>
+                            <span>Survey Management - Full Access</span>
+                        </div>
+                        <div class="flex items-center gap-2 text-sm">
+                            <span class="material-symbols-outlined text-green-600 text-sm">check_circle</span>
+                            <span>Office Head Management - Full Access</span>
+                        </div>
+                        <div class="flex items-center gap-2 text-sm">
+                            <span class="material-symbols-outlined text-green-600 text-sm">check_circle</span>
+                            <span>Reports & Analytics - View Only</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="p-6 border-t border-slate-200 flex justify-end gap-3">
+                <button class="px-4 py-2 border border-slate-300 rounded-lg text-sm font-medium hover:bg-slate-50" onclick="closeViewModal()">
+                    Close
+                </button>
+                <button class="px-4 py-2 bg-primary text-white rounded-lg text-sm font-semibold hover:bg-primary/90" onclick="editFromView()">
+                    Edit User
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Reset Password Confirmation Modal -->
+    <div id="resetPasswordModal" class="fixed inset-0 bg-black/50 z-50 hidden flex items-center justify-center modal">
+        <div class="bg-white rounded-xl max-w-md w-full mx-4 p-6">
+            <div class="flex items-center gap-3 mb-4">
+                <div class="w-10 h-10 rounded-full bg-amber-100 flex items-center justify-center text-amber-600">
+                    <span class="material-symbols-outlined">key</span>
+                </div>
+                <h3 class="text-lg font-bold">Reset Password</h3>
+            </div>
+            
+            <p class="text-sm text-slate-600 mb-4">This will reset the password for <span class="font-medium" id="resetUserEmail">maria.santos@agency.gov.ph</span>. A temporary password will be sent to their email.</p>
+            
+            <div class="flex gap-3 justify-end">
+                <button class="px-4 py-2 border border-slate-300 rounded-lg text-sm font-medium hover:bg-slate-50" onclick="closeResetModal()">
+                    Cancel
+                </button>
+                <button class="px-4 py-2 bg-amber-600 text-white rounded-lg text-sm font-semibold hover:bg-amber-700" onclick="confirmReset()">
+                    Reset Password
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Delete User Confirmation Modal -->
+    <div id="deleteUserModal" class="fixed inset-0 bg-black/50 z-50 hidden flex items-center justify-center modal">
+        <div class="bg-white rounded-xl max-w-md w-full mx-4 p-6">
+            <div class="flex items-center gap-3 mb-4">
+                <div class="w-10 h-10 rounded-full bg-red-100 flex items-center justify-center text-red-600">
+                    <span class="material-symbols-outlined">warning</span>
+                </div>
+                <h3 class="text-lg font-bold">Delete User</h3>
+            </div>
+            
+            <p class="text-sm text-slate-600 mb-4">Are you sure you want to delete this user? This action cannot be undone.</p>
+            
+            <div class="flex gap-3 justify-end">
+                <button class="px-4 py-2 border border-slate-300 rounded-lg text-sm font-medium hover:bg-slate-50" onclick="closeDeleteModal()">
+                    Cancel
+                </button>
+                <button class="px-4 py-2 bg-red-600 text-white rounded-lg text-sm font-semibold hover:bg-red-700" onclick="confirmDelete()">
+                    Delete User
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentTab = 'all';
+        let currentStatusFilter = 'all';
+        let currentRoleFilter = 'all';
+
+        // Tab switching
+        function switchTab(tab) {
+            currentTab = tab;
+            
+            // Update tab buttons
+            document.querySelectorAll('.tab-button').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            document.getElementById(`tab-${tab}`).classList.add('active');
+            
+            // Apply filters
+            applyFilters();
+        }
+
+        // Filter by status
+        function filterByStatus(status) {
+            currentStatusFilter = status;
+            
+            // Update filter pills
+            document.querySelectorAll('.filter-pill').forEach(pill => {
+                pill.classList.remove('active');
+            });
+            document.getElementById(`status-${status}`).classList.add('active');
+            
+            // Apply filters
+            applyFilters();
+        }
+
+        // Filter by role
+        function filterByRole(role) {
+            currentRoleFilter = role;
+            applyFilters();
+        }
+
+        // Apply all filters
+        function applyFilters() {
+            const rows = document.querySelectorAll('#usersTable tr.user-row');
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            
+            rows.forEach(row => {
+                let show = true;
+                
+                // Tab filter (all, admins, office-heads)
+                if (currentTab !== 'all') {
+                    const role = row.dataset.role;
+                    if (currentTab === 'admins' && role !== 'admin') show = false;
+                    if (currentTab === 'office-heads' && role !== 'office-head') show = false;
+                }
+                
+                // Status filter
+                if (show && currentStatusFilter !== 'all') {
+                    if (row.dataset.status !== currentStatusFilter) show = false;
+                }
+                
+                // Role filter
+                if (show && currentRoleFilter !== 'all') {
+                    if (row.dataset.role !== currentRoleFilter) show = false;
+                }
+                
+                // Search filter
+                if (show && searchTerm) {
+                    const text = row.textContent.toLowerCase();
+                    if (!text.includes(searchTerm)) show = false;
+                }
+                
+                row.style.display = show ? '' : 'none';
+            });
+        }
+
+        // Search input
+        document.getElementById('searchInput').addEventListener('keyup', applyFilters);
+
+        // Modal functions
+        function openAddModal() {
+            document.getElementById('modalTitle').textContent = 'Add New User';
+            document.getElementById('userModal').classList.remove('hidden');
+        }
+
+        function closeModal() {
+            document.getElementById('userModal').classList.add('hidden');
+        }
+
+        function closeViewModal() {
+            document.getElementById('viewUserModal').classList.add('hidden');
+        }
+
+        function closeResetModal() {
+            document.getElementById('resetPasswordModal').classList.add('hidden');
+        }
+
+        function closeDeleteModal() {
+            document.getElementById('deleteUserModal').classList.add('hidden');
+        }
+
+        // View user
+        function viewUser(id) {
+            // In production, fetch user data based on ID
+            document.getElementById('viewUserModal').classList.remove('hidden');
+        }
+
+        // Edit user
+        function editUser(id) {
+            document.getElementById('modalTitle').textContent = 'Edit User';
+            // Populate form with user data
+            document.getElementById('userModal').classList.remove('hidden');
+        }
+
+        // Edit from view modal
+        function editFromView() {
+            closeViewModal();
+            editUser(1);
+        }
+
+        // Reset password
+        function resetPassword(id) {
+            document.getElementById('resetPasswordModal').classList.remove('hidden');
+        }
+
+        // Confirm reset
+        function confirmReset() {
+            alert('Password reset email sent successfully!');
+            closeResetModal();
+        }
+
+        // Resend invite
+        function resendInvite(id) {
+            alert('Invitation email resent successfully!');
+        }
+
+        // Activate now
+        function activateNow(id) {
+            if (confirm('Activate this user now?')) {
+                alert('User activated successfully!');
+            }
+        }
+
+        // Toggle user status
+        function toggleUserStatus(id) {
+            if (confirm('Change user status?')) {
+                alert('User status updated successfully!');
+            }
+        }
+
+        // Reactivate user
+        function reactivateUser(id) {
+            if (confirm('Reactivate this user?')) {
+                alert('User reactivated successfully!');
+            }
+        }
+
+        // Delete user
+        function deleteUser(id) {
+            document.getElementById('deleteUserModal').classList.remove('hidden');
+        }
+
+        // Confirm delete
+        function confirmDelete() {
+            alert('User deleted successfully!');
+            closeDeleteModal();
+        }
+
+        // Save user
+        function saveUser() {
+            alert('User saved successfully!');
+            closeModal();
+        }
+
+        // Export users
+        function exportUsers() {
+            alert('Exporting users data...');
+        }
+
+        // Handle role change in form
+        document.querySelectorAll('input[name="role"]').forEach(radio => {
+            radio.addEventListener('change', function() {
+                const deptFields = document.getElementById('deptFields');
+                if (this.value === 'office-head') {
+                    deptFields.style.display = 'block';
+                } else {
+                    deptFields.style.display = 'none';
+                }
+            });
+        });
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            // Hide department fields for admin by default
+            document.getElementById('deptFields').style.display = 'block'; // Will be hidden if admin selected
+        });
+    </script>
+    <%- include('../partials/scripts') %>
+</body>
+</html>

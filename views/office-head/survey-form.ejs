@@ -1,0 +1,525 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <%- include('../partials/head', { title: 'Complete Survey' }) %>
+    <style>
+        .file-upload-area {
+            border: 2px dashed #cbd5e1;
+            transition: all 0.3s ease;
+        }
+        .file-upload-area:hover {
+            border-color: #1d3e8b;
+            background-color: rgba(29, 62, 139, 0.02);
+        }
+        .file-upload-area.dragover {
+            border-color: #1d3e8b;
+            background-color: rgba(29, 62, 139, 0.05);
+        }
+        .conditional-comment {
+            transition: all 0.3s ease;
+        }
+        .progress-step {
+            transition: all 0.3s ease;
+        }
+        .progress-step.completed {
+            background-color: #10b981;
+            color: white;
+        }
+        .progress-step.active {
+            background-color: #1d3e8b;
+            color: white;
+            transform: scale(1.05);
+        }
+    </style>
+</head>
+<body class="bg-background-light dark:bg-background-dark font-display text-slate-900 dark:text-slate-100">
+    <!-- Mobile Menu Overlay -->
+    <div id="mobileMenuOverlay" class="fixed inset-0 bg-black/50 z-40 hidden lg:hidden transition-opacity"></div>
+
+    <div class="flex h-screen overflow-hidden">
+        <!-- Sidebar -->
+        <%- include('../partials/sidebar', { 
+            role: 'office-head', 
+            currentPage: 'my-surveys',
+            user: user 
+        }) %>
+
+        <!-- Main Content -->
+        <main class="flex-1 flex flex-col min-w-0 h-screen overflow-hidden bg-background-light dark:bg-background-dark">
+            <!-- Header -->
+            <%- include('../partials/header', { 
+                role: 'office-head', 
+                pageTitle: 'Complete Survey',
+                user: user 
+            }) %>
+
+            <!-- Scrollable Content Area -->
+            <div class="flex-1 overflow-y-auto custom-scrollbar">
+                <div class="max-w-4xl mx-auto px-4 lg:px-6 py-6 lg:py-8">
+                    <!-- Survey Header -->
+                    <div class="mb-6 lg:mb-8">
+                        <div class="flex items-center gap-2 text-slate-500 text-sm mb-2">
+                            <a href="/office-head/my-surveys" class="hover:text-primary transition-colors">My Surveys</a>
+                            <span class="material-symbols-outlined text-sm">chevron_right</span>
+                            <span class="text-primary font-medium">Internal Control Self-Assessment</span>
+                        </div>
+                        
+                        <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+                            <div>
+                                <h1 class="text-2xl lg:text-3xl font-black text-slate-900 dark:text-white tracking-tight">Internal Control Self-Assessment</h1>
+                                <p class="text-sm lg:text-base text-slate-500 dark:text-slate-400 mt-1">Complete all questions. Comments are required when answering "No".</p>
+                            </div>
+                            <div class="flex items-center gap-3">
+                                <span class="px-3 py-1 bg-amber-100 text-amber-700 rounded-full text-xs font-bold flex items-center gap-1">
+                                    <span class="material-symbols-outlined text-sm">schedule</span>
+                                    Due in 5 hours
+                                </span>
+                                <span class="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-xs font-bold">75% Complete</span>
+                            </div>
+                        </div>
+
+                        <!-- Progress Bar -->
+                        <div class="mt-6">
+                            <div class="flex justify-between text-xs text-slate-500 mb-2">
+                                <span>Progress</span>
+                                <span>9/12 Questions</span>
+                            </div>
+                            <div class="w-full h-2 bg-slate-200 dark:bg-slate-800 rounded-full overflow-hidden">
+                                <div class="bg-primary h-full rounded-full" style="width: 75%"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Survey Form -->
+                    <form id="surveyForm" class="space-y-6 lg:space-y-8">
+                        <!-- Section Header -->
+                        <div class="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-4 lg:p-6">
+                            <h2 class="text-lg lg:text-xl font-bold text-primary mb-2">Control Activities</h2>
+                            <p class="text-xs lg:text-sm text-slate-500">This section assesses the effectiveness of your internal control activities.</p>
+                        </div>
+
+                        <!-- Question 1 - Yes/No with Conditional Comment -->
+                        <div class="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 overflow-hidden">
+                            <div class="p-4 lg:p-6">
+                                <div class="flex items-start gap-3">
+                                    <span class="w-6 h-6 rounded-full bg-primary/10 text-primary flex items-center justify-center text-xs font-bold flex-shrink-0 mt-0.5">1</span>
+                                    <div class="flex-1">
+                                        <h3 class="text-sm lg:text-base font-bold text-slate-900 dark:text-white mb-3">
+                                            Are segregation of duties properly implemented in your financial processes?
+                                        </h3>
+                                        
+                                        <!-- Yes/No Options -->
+                                        <div class="flex flex-wrap gap-4 mb-4">
+                                            <label class="flex items-center gap-2 cursor-pointer group">
+                                                <input type="radio" name="q1" value="yes" class="w-4 h-4 text-primary border-slate-300 focus:ring-primary/20" onchange="toggleComment('q1', false)">
+                                                <span class="text-sm group-hover:text-primary transition-colors">Yes</span>
+                                            </label>
+                                            <label class="flex items-center gap-2 cursor-pointer group">
+                                                <input type="radio" name="q1" value="no" class="w-4 h-4 text-red-600 border-slate-300 focus:ring-red-600/20" onchange="toggleComment('q1', true)">
+                                                <span class="text-sm group-hover:text-red-600 transition-colors">No</span>
+                                            </label>
+                                        </div>
+
+                                        <!-- Conditional Comment Box (shows when No is selected) -->
+                                        <div id="comment-q1" class="conditional-comment hidden mt-4 p-4 bg-amber-50 dark:bg-amber-900/10 rounded-lg border border-amber-200 dark:border-amber-800">
+                                            <label class="block text-xs font-bold text-amber-800 dark:text-amber-400 mb-2">
+                                                Please explain why segregation of duties is not properly implemented: <span class="text-red-500">*</span>
+                                            </label>
+                                            <textarea rows="3" class="w-full px-3 py-2 bg-white dark:bg-slate-800 border border-amber-200 dark:border-amber-700 rounded-lg text-sm focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500" placeholder="Provide details about the current situation..."></textarea>
+                                            
+                                            <!-- Optional File Attachment -->
+                                            <div class="mt-4">
+                                                <p class="text-xs font-medium text-amber-800 dark:text-amber-400 mb-2">Supporting Documents (Optional)</p>
+                                                <div class="file-upload-area p-4 rounded-lg bg-white dark:bg-slate-800 text-center cursor-pointer" onclick="document.getElementById('file-q1').click()">
+                                                    <input type="file" id="file-q1" class="hidden" multiple accept=".pdf,.doc,.docx,.jpg,.jpeg,.png">
+                                                    <span class="material-symbols-outlined text-3xl text-slate-400 mb-2">cloud_upload</span>
+                                                    <p class="text-xs text-slate-500">Drag & drop files here or click to browse</p>
+                                                    <p class="text-[10px] text-slate-400 mt-1">Supported: PDF, DOC, DOCX, JPG, PNG (Max 10MB)</p>
+                                                </div>
+                                                <!-- File List Preview -->
+                                                <div id="fileList-q1" class="mt-2 space-y-1"></div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Question 2 - Yes/No with Conditional Comment -->
+                        <div class="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 overflow-hidden">
+                            <div class="p-4 lg:p-6">
+                                <div class="flex items-start gap-3">
+                                    <span class="w-6 h-6 rounded-full bg-primary/10 text-primary flex items-center justify-center text-xs font-bold flex-shrink-0 mt-0.5">2</span>
+                                    <div class="flex-1">
+                                        <h3 class="text-sm lg:text-base font-bold text-slate-900 dark:text-white mb-3">
+                                            Are all financial transactions properly authorized and documented?
+                                        </h3>
+                                        
+                                        <div class="flex flex-wrap gap-4 mb-4">
+                                            <label class="flex items-center gap-2 cursor-pointer group">
+                                                <input type="radio" name="q2" value="yes" class="w-4 h-4 text-primary border-slate-300 focus:ring-primary/20" onchange="toggleComment('q2', false)">
+                                                <span class="text-sm group-hover:text-primary transition-colors">Yes</span>
+                                            </label>
+                                            <label class="flex items-center gap-2 cursor-pointer group">
+                                                <input type="radio" name="q2" value="no" class="w-4 h-4 text-red-600 border-slate-300 focus:ring-red-600/20" onchange="toggleComment('q2', true)">
+                                                <span class="text-sm group-hover:text-red-600 transition-colors">No</span>
+                                            </label>
+                                        </div>
+
+                                        <!-- Conditional Comment Box -->
+                                        <div id="comment-q2" class="conditional-comment hidden mt-4 p-4 bg-amber-50 dark:bg-amber-900/10 rounded-lg border border-amber-200 dark:border-amber-800">
+                                            <label class="block text-xs font-bold text-amber-800 dark:text-amber-400 mb-2">
+                                                Please explain the gaps in authorization and documentation: <span class="text-red-500">*</span>
+                                            </label>
+                                            <textarea rows="3" class="w-full px-3 py-2 bg-white dark:bg-slate-800 border border-amber-200 dark:border-amber-700 rounded-lg text-sm focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500" placeholder="Describe the current authorization process and any exceptions..."></textarea>
+                                            
+                                            <div class="mt-4">
+                                                <p class="text-xs font-medium text-amber-800 dark:text-amber-400 mb-2">Supporting Documents (Optional)</p>
+                                                <div class="file-upload-area p-4 rounded-lg bg-white dark:bg-slate-800 text-center cursor-pointer" onclick="document.getElementById('file-q2').click()">
+                                                    <input type="file" id="file-q2" class="hidden" multiple accept=".pdf,.doc,.docx,.jpg,.jpeg,.png">
+                                                    <span class="material-symbols-outlined text-3xl text-slate-400 mb-2">cloud_upload</span>
+                                                    <p class="text-xs text-slate-500">Drag & drop files here or click to browse</p>
+                                                    <p class="text-[10px] text-slate-400 mt-1">Supported: PDF, DOC, DOCX, JPG, PNG (Max 10MB)</p>
+                                                </div>
+                                                <div id="fileList-q2" class="mt-2 space-y-1"></div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Question 3 - Yes/No with Conditional Comment -->
+                        <div class="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 overflow-hidden">
+                            <div class="p-4 lg:p-6">
+                                <div class="flex items-start gap-3">
+                                    <span class="w-6 h-6 rounded-full bg-primary/10 text-primary flex items-center justify-center text-xs font-bold flex-shrink-0 mt-0.5">3</span>
+                                    <div class="flex-1">
+                                        <h3 class="text-sm lg:text-base font-bold text-slate-900 dark:text-white mb-3">
+                                            Are physical assets (equipment, inventory) regularly counted and reconciled?
+                                        </h3>
+                                        
+                                        <div class="flex flex-wrap gap-4 mb-4">
+                                            <label class="flex items-center gap-2 cursor-pointer group">
+                                                <input type="radio" name="q3" value="yes" class="w-4 h-4 text-primary border-slate-300 focus:ring-primary/20" onchange="toggleComment('q3', false)">
+                                                <span class="text-sm group-hover:text-primary transition-colors">Yes</span>
+                                            </label>
+                                            <label class="flex items-center gap-2 cursor-pointer group">
+                                                <input type="radio" name="q3" value="no" class="w-4 h-4 text-red-600 border-slate-300 focus:ring-red-600/20" onchange="toggleComment('q3', true)">
+                                                <span class="text-sm group-hover:text-red-600 transition-colors">No</span>
+                                            </label>
+                                        </div>
+
+                                        <!-- Conditional Comment Box -->
+                                        <div id="comment-q3" class="conditional-comment hidden mt-4 p-4 bg-amber-50 dark:bg-amber-900/10 rounded-lg border border-amber-200 dark:border-amber-800">
+                                            <label class="block text-xs font-bold text-amber-800 dark:text-amber-400 mb-2">
+                                                Please explain the issues with physical asset reconciliation: <span class="text-red-500">*</span>
+                                            </label>
+                                            <textarea rows="3" class="w-full px-3 py-2 bg-white dark:bg-slate-800 border border-amber-200 dark:border-amber-700 rounded-lg text-sm focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500" placeholder="Describe the frequency of counts and any discrepancies..."></textarea>
+                                            
+                                            <div class="mt-4">
+                                                <p class="text-xs font-medium text-amber-800 dark:text-amber-400 mb-2">Supporting Documents (Optional)</p>
+                                                <div class="file-upload-area p-4 rounded-lg bg-white dark:bg-slate-800 text-center cursor-pointer" onclick="document.getElementById('file-q3').click()">
+                                                    <input type="file" id="file-q3" class="hidden" multiple accept=".pdf,.doc,.docx,.jpg,.jpeg,.png">
+                                                    <span class="material-symbols-outlined text-3xl text-slate-400 mb-2">cloud_upload</span>
+                                                    <p class="text-xs text-slate-500">Drag & drop files here or click to browse</p>
+                                                    <p class="text-[10px] text-slate-400 mt-1">Supported: PDF, DOC, DOCX, JPG, PNG (Max 10MB)</p>
+                                                </div>
+                                                <div id="fileList-q3" class="mt-2 space-y-1"></div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Question 4 - Yes/No with Conditional Comment -->
+                        <div class="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 overflow-hidden">
+                            <div class="p-4 lg:p-6">
+                                <div class="flex items-start gap-3">
+                                    <span class="w-6 h-6 rounded-full bg-primary/10 text-primary flex items-center justify-center text-xs font-bold flex-shrink-0 mt-0.5">4</span>
+                                    <div class="flex-1">
+                                        <h3 class="text-sm lg:text-base font-bold text-slate-900 dark:text-white mb-3">
+                                            Are IT system access controls properly maintained and reviewed?
+                                        </h3>
+                                        
+                                        <div class="flex flex-wrap gap-4 mb-4">
+                                            <label class="flex items-center gap-2 cursor-pointer group">
+                                                <input type="radio" name="q4" value="yes" class="w-4 h-4 text-primary border-slate-300 focus:ring-primary/20" onchange="toggleComment('q4', false)">
+                                                <span class="text-sm group-hover:text-primary transition-colors">Yes</span>
+                                            </label>
+                                            <label class="flex items-center gap-2 cursor-pointer group">
+                                                <input type="radio" name="q4" value="no" class="w-4 h-4 text-red-600 border-slate-300 focus:ring-red-600/20" onchange="toggleComment('q4', true)">
+                                                <span class="text-sm group-hover:text-red-600 transition-colors">No</span>
+                                            </label>
+                                        </div>
+
+                                        <!-- Conditional Comment Box -->
+                                        <div id="comment-q4" class="conditional-comment hidden mt-4 p-4 bg-amber-50 dark:bg-amber-900/10 rounded-lg border border-amber-200 dark:border-amber-800">
+                                            <label class="block text-xs font-bold text-amber-800 dark:text-amber-400 mb-2">
+                                                Please explain the IT access control gaps: <span class="text-red-500">*</span>
+                                            </label>
+                                            <textarea rows="3" class="w-full px-3 py-2 bg-white dark:bg-slate-800 border border-amber-200 dark:border-amber-700 rounded-lg text-sm focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500" placeholder="Describe access review frequency and any issues..."></textarea>
+                                            
+                                            <div class="mt-4">
+                                                <p class="text-xs font-medium text-amber-800 dark:text-amber-400 mb-2">Supporting Documents (Optional)</p>
+                                                <div class="file-upload-area p-4 rounded-lg bg-white dark:bg-slate-800 text-center cursor-pointer" onclick="document.getElementById('file-q4').click()">
+                                                    <input type="file" id="file-q4" class="hidden" multiple accept=".pdf,.doc,.docx,.jpg,.jpeg,.png">
+                                                    <span class="material-symbols-outlined text-3xl text-slate-400 mb-2">cloud_upload</span>
+                                                    <p class="text-xs text-slate-500">Drag & drop files here or click to browse</p>
+                                                    <p class="text-[10px] text-slate-400 mt-1">Supported: PDF, DOC, DOCX, JPG, PNG (Max 10MB)</p>
+                                                </div>
+                                                <div id="fileList-q4" class="mt-2 space-y-1"></div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Question 5 - Yes/No with Conditional Comment -->
+                        <div class="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 overflow-hidden">
+                            <div class="p-4 lg:p-6">
+                                <div class="flex items-start gap-3">
+                                    <span class="w-6 h-6 rounded-full bg-primary/10 text-primary flex items-center justify-center text-xs font-bold flex-shrink-0 mt-0.5">5</span>
+                                    <div class="flex-1">
+                                        <h3 class="text-sm lg:text-base font-bold text-slate-900 dark:text-white mb-3">
+                                            Are policies and procedures documented and accessible to all staff?
+                                        </h3>
+                                        
+                                        <div class="flex flex-wrap gap-4 mb-4">
+                                            <label class="flex items-center gap-2 cursor-pointer group">
+                                                <input type="radio" name="q5" value="yes" class="w-4 h-4 text-primary border-slate-300 focus:ring-primary/20" onchange="toggleComment('q5', false)">
+                                                <span class="text-sm group-hover:text-primary transition-colors">Yes</span>
+                                            </label>
+                                            <label class="flex items-center gap-2 cursor-pointer group">
+                                                <input type="radio" name="q5" value="no" class="w-4 h-4 text-red-600 border-slate-300 focus:ring-red-600/20" onchange="toggleComment('q5', true)">
+                                                <span class="text-sm group-hover:text-red-600 transition-colors">No</span>
+                                            </label>
+                                        </div>
+
+                                        <!-- Conditional Comment Box -->
+                                        <div id="comment-q5" class="conditional-comment hidden mt-4 p-4 bg-amber-50 dark:bg-amber-900/10 rounded-lg border border-amber-200 dark:border-amber-800">
+                                            <label class="block text-xs font-bold text-amber-800 dark:text-amber-400 mb-2">
+                                                Please explain the documentation gaps: <span class="text-red-500">*</span>
+                                            </label>
+                                            <textarea rows="3" class="w-full px-3 py-2 bg-white dark:bg-slate-800 border border-amber-200 dark:border-amber-700 rounded-lg text-sm focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500" placeholder="Describe which policies are missing or not accessible..."></textarea>
+                                            
+                                            <div class="mt-4">
+                                                <p class="text-xs font-medium text-amber-800 dark:text-amber-400 mb-2">Supporting Documents (Optional)</p>
+                                                <div class="file-upload-area p-4 rounded-lg bg-white dark:bg-slate-800 text-center cursor-pointer" onclick="document.getElementById('file-q5').click()">
+                                                    <input type="file" id="file-q5" class="hidden" multiple accept=".pdf,.doc,.docx,.jpg,.jpeg,.png">
+                                                    <span class="material-symbols-outlined text-3xl text-slate-400 mb-2">cloud_upload</span>
+                                                    <p class="text-xs text-slate-500">Drag & drop files here or click to browse</p>
+                                                    <p class="text-[10px] text-slate-400 mt-1">Supported: PDF, DOC, DOCX, JPG, PNG (Max 10MB)</p>
+                                                </div>
+                                                <div id="fileList-q5" class="mt-2 space-y-1"></div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Navigation Buttons -->
+                        <div class="flex flex-col sm:flex-row justify-between gap-4 pt-4">
+                            <a href="/office-head/my-surveys" class="px-6 py-3 border border-slate-200 dark:border-slate-700 rounded-lg text-sm font-bold text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors text-center">
+                                Save & Exit
+                            </a>
+                            <div class="flex gap-3">
+                                <button type="button" class="px-6 py-3 border border-slate-200 dark:border-slate-700 rounded-lg text-sm font-bold text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
+                                    Previous
+                                </button>
+                                <button type="submit" class="px-6 py-3 bg-primary hover:bg-primary/90 text-white rounded-lg text-sm font-bold transition-colors shadow-lg shadow-primary/20">
+                                    Next Section
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Form Actions -->
+                        <div class="flex justify-end gap-3 pt-4 border-t border-slate-200 dark:border-slate-800">
+                            <button type="button" class="px-4 py-2 text-sm font-medium text-slate-600 dark:text-slate-400 hover:text-primary transition-colors" onclick="saveDraft()">
+                                Save as Draft
+                            </button>
+                            <button type="button" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-sm font-bold transition-colors shadow-lg shadow-emerald-600/20" onclick="submitSurvey()">
+                                Submit Survey
+                            </button>
+                        </div>
+                    </form>
+
+                    <!-- Survey Notes -->
+                    <div class="mt-6 p-4 bg-blue-50 dark:bg-blue-900/10 rounded-lg border border-blue-200 dark:border-blue-800">
+                        <div class="flex items-start gap-3">
+                            <span class="material-symbols-outlined text-blue-600 text-sm mt-0.5">info</span>
+                            <div>
+                                <h4 class="text-xs font-bold text-blue-800 dark:text-blue-400 mb-1">Survey Instructions</h4>
+                                <ul class="text-[10px] lg:text-xs text-blue-700 dark:text-blue-300 space-y-1 list-disc list-inside">
+                                    <li>Answer all questions with Yes or No</li>
+                                    <li>If you answer "No", a comment is required explaining the situation</li>
+                                    <li>You may attach supporting documents (PDF, DOC, DOCX, JPG, PNG) - maximum 10MB per file</li>
+                                    <li>You can save your progress as a draft and continue later</li>
+                                    <li>All fields marked with <span class="text-red-500">*</span> are required when applicable</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- JavaScript for Interactive Features -->
+    <script>
+        // Toggle comment box based on Yes/No selection
+        function toggleComment(questionId, show) {
+            const commentBox = document.getElementById(`comment-${questionId}`);
+            if (show) {
+                commentBox.classList.remove('hidden');
+                // Make textarea required
+                const textarea = commentBox.querySelector('textarea');
+                if (textarea) textarea.required = true;
+            } else {
+                commentBox.classList.add('hidden');
+                // Remove required attribute
+                const textarea = commentBox.querySelector('textarea');
+                if (textarea) textarea.required = false;
+            }
+        }
+
+        // Handle file upload for each question
+        document.querySelectorAll('input[type="file"]').forEach(input => {
+            input.addEventListener('change', function(e) {
+                const questionId = this.id.replace('file-', '');
+                const fileList = document.getElementById(`fileList-${questionId}`);
+                fileList.innerHTML = '';
+                
+                Array.from(this.files).forEach(file => {
+                    const fileItem = document.createElement('div');
+                    fileItem.className = 'flex items-center justify-between bg-white dark:bg-slate-800 p-2 rounded-lg text-xs';
+                    fileItem.innerHTML = `
+                        <div class="flex items-center gap-2">
+                            <span class="material-symbols-outlined text-slate-400 text-sm">description</span>
+                            <span class="text-slate-600 dark:text-slate-400">${file.name}</span>
+                            <span class="text-slate-400">(${(file.size / 1024).toFixed(1)} KB)</span>
+                        </div>
+                        <button type="button" onclick="removeFile('${questionId}', '${file.name}')" class="text-red-500 hover:text-red-700">
+                            <span class="material-symbols-outlined text-sm">close</span>
+                        </button>
+                    `;
+                    fileList.appendChild(fileItem);
+                });
+            });
+        });
+
+        // Remove file from upload list
+        function removeFile(questionId, fileName) {
+            const input = document.getElementById(`file-${questionId}`);
+            const fileList = document.getElementById(`fileList-${questionId}`);
+            
+            // Create new FileList without the removed file (simplified - in production you'd handle this differently)
+            fileList.innerHTML = '';
+            
+            // Reset input
+            input.value = '';
+        }
+
+        // Drag and drop functionality
+        document.querySelectorAll('.file-upload-area').forEach(area => {
+            ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+                area.addEventListener(eventName, preventDefaults, false);
+            });
+
+            function preventDefaults(e) {
+                e.preventDefault();
+                e.stopPropagation();
+            }
+
+            ['dragenter', 'dragover'].forEach(eventName => {
+                area.addEventListener(eventName, () => {
+                    area.classList.add('dragover');
+                });
+            });
+
+            ['dragleave', 'drop'].forEach(eventName => {
+                area.addEventListener(eventName, () => {
+                    area.classList.remove('dragover');
+                });
+            });
+
+            area.addEventListener('drop', (e) => {
+                const input = area.querySelector('input[type="file"]');
+                const files = e.dataTransfer.files;
+                input.files = files;
+                
+                // Trigger change event
+                const event = new Event('change', { bubbles: true });
+                input.dispatchEvent(event);
+            });
+        });
+
+        // Save draft function
+        function saveDraft() {
+            // Collect form data
+            const formData = new FormData(document.getElementById('surveyForm'));
+            
+            // Show success message (in production, send to server)
+            alert('Draft saved successfully! You can continue later.');
+        }
+
+        // Submit survey function
+        function submitSurvey() {
+            // Check if all required fields are filled
+            const requiredFields = document.querySelectorAll('[required]');
+            let isValid = true;
+            
+            requiredFields.forEach(field => {
+                if (!field.value) {
+                    isValid = false;
+                    field.classList.add('border-red-500');
+                } else {
+                    field.classList.remove('border-red-500');
+                }
+            });
+
+            // Check if all questions are answered
+            const questions = document.querySelectorAll('input[type="radio"]');
+            const questionGroups = {};
+            questions.forEach(q => {
+                if (!questionGroups[q.name]) {
+                    questionGroups[q.name] = false;
+                }
+                if (q.checked) {
+                    questionGroups[q.name] = true;
+                }
+            });
+
+            const allAnswered = Object.values(questionGroups).every(v => v === true);
+            
+            if (!allAnswered) {
+                alert('Please answer all questions before submitting.');
+                return;
+            }
+
+            if (!isValid) {
+                alert('Please fill in all required comment fields for "No" answers.');
+                return;
+            }
+
+            // If validation passes, redirect to confirmation page
+            window.location.href = '/office-head/survey-confirmation';
+        }
+
+        // Initialize tooltips or other features
+        document.addEventListener('DOMContentLoaded', function() {
+            // Check for any pre-selected "No" answers on page load
+            document.querySelectorAll('input[type="radio"][value="no"]:checked').forEach(radio => {
+                const questionId = radio.name;
+                toggleComment(questionId, true);
+            });
+        });
+    </script>
+
+    <!-- Scripts -->
+    <%- include('../partials/scripts') %>
+</body>
+</html>

@@ -1,0 +1,932 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <%- include('../partials/head', { title: 'Office Head Management' }) %>
+    <style>
+        .status-badge {
+            padding: 4px 10px;
+            border-radius: 30px;
+            font-size: 11px;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .status-active {
+            background: #dcfce7;
+            color: #166534;
+        }
+        .status-inactive {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+        .status-pending {
+            background: #fef3c7;
+            color: #92400e;
+        }
+        .department-badge {
+            background: #e2e8f0;
+            color: #334155;
+            padding: 2px 8px;
+            border-radius: 30px;
+            font-size: 11px;
+            font-weight: 500;
+        }
+        .table-row-hover:hover {
+            background: #f8fafc;
+        }
+        .filter-pill {
+            padding: 6px 14px;
+            border-radius: 30px;
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .filter-pill.active {
+            background: #1d3e8b;
+            color: white;
+        }
+        .filter-pill:not(.active):hover {
+            background: #e2e8f0;
+        }
+        .modal {
+            transition: opacity 0.2s ease;
+        }
+        .modal.hidden {
+            display: none;
+        }
+        .stat-card {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            border: 1px solid #e2e8f0;
+            transition: all 0.2s;
+        }
+        .stat-card:hover {
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            border-color: #1d3e8b;
+        }
+        .action-btn {
+            padding: 6px;
+            border-radius: 8px;
+            color: #64748b;
+            transition: all 0.2s;
+        }
+        .action-btn:hover {
+            background: #f1f5f9;
+            color: #1d3e8b;
+        }
+        .action-btn.delete:hover {
+            background: #fee2e2;
+            color: #dc2626;
+        }
+    </style>
+</head>
+<body class="bg-[#f8fafc] dark:bg-background-dark font-display">
+    <!-- Mobile Menu Overlay -->
+    <div id="mobileMenuOverlay" class="fixed inset-0 bg-black/50 z-40 hidden lg:hidden"></div>
+
+    <div class="flex h-screen overflow-hidden">
+        <!-- Sidebar -->
+        <%- include('../partials/sidebar', { 
+            role: 'admin', 
+            currentPage: 'office-heads',
+            user: user 
+        }) %>
+
+        <!-- Main Content -->
+        <main class="flex-1 flex flex-col min-w-0 h-screen overflow-hidden bg-[#f8fafc] dark:bg-background-dark">
+            <!-- Header -->
+            <%- include('../partials/header', { 
+                role: 'admin', 
+                pageTitle: 'Office Head Management',
+                user: user 
+            }) %>
+
+            <!-- Scrollable Content -->
+            <div class="flex-1 overflow-y-auto custom-scrollbar p-6 lg:p-8">
+                <div class="max-w-7xl mx-auto">
+                    <!-- Header with Actions -->
+                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+                        <div>
+                            <h1 class="text-2xl lg:text-3xl font-bold text-slate-800">Office Head Management</h1>
+                            <p class="text-sm text-slate-500 mt-1">Manage all department respondents and their access</p>
+                        </div>
+                        <div class="flex gap-3">
+                            <button class="px-4 py-2 border border-slate-300 rounded-lg text-sm font-medium hover:bg-slate-50 flex items-center gap-2" onclick="exportData()">
+                                <span class="material-symbols-outlined text-sm">download</span>
+                                Export
+                            </button>
+                            <button class="px-4 py-2 bg-primary text-white rounded-lg text-sm font-semibold flex items-center gap-2 shadow-md hover:bg-primary/90" onclick="openAddModal()">
+                                <span class="material-symbols-outlined text-sm">add</span>
+                                Add Office Head
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Stats Cards -->
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+                        <div class="stat-card">
+                            <div class="flex items-center justify-between mb-2">
+                                <span class="text-sm text-slate-500">Total Office Heads</span>
+                                <span class="material-symbols-outlined text-primary">groups</span>
+                            </div>
+                            <p class="text-2xl font-bold">24</p>
+                            <p class="text-xs text-slate-400 mt-1">Across 16 departments</p>
+                        </div>
+                        
+                        <div class="stat-card">
+                            <div class="flex items-center justify-between mb-2">
+                                <span class="text-sm text-slate-500">Active</span>
+                                <span class="material-symbols-outlined text-emerald-600">check_circle</span>
+                            </div>
+                            <p class="text-2xl font-bold text-emerald-600">18</p>
+                            <p class="text-xs text-slate-400 mt-1">75% of total</p>
+                        </div>
+                        
+                        <div class="stat-card">
+                            <div class="flex items-center justify-between mb-2">
+                                <span class="text-sm text-slate-500">Pending Activation</span>
+                                <span class="material-symbols-outlined text-amber-600">pending</span>
+                            </div>
+                            <p class="text-2xl font-bold text-amber-600">4</p>
+                            <p class="text-xs text-slate-400 mt-1">Awaiting setup</p>
+                        </div>
+                        
+                        <div class="stat-card">
+                            <div class="flex items-center justify-between mb-2">
+                                <span class="text-sm text-slate-500">Inactive</span>
+                                <span class="material-symbols-outlined text-red-600">pause_circle</span>
+                            </div>
+                            <p class="text-2xl font-bold text-red-600">2</p>
+                            <p class="text-xs text-slate-400 mt-1">Temporarily disabled</p>
+                        </div>
+                    </div>
+
+                    <!-- Filters and Search -->
+                    <div class="bg-white rounded-xl border border-slate-200 p-4 mb-6">
+                        <div class="flex flex-col lg:flex-row gap-4">
+                            <!-- Search -->
+                            <div class="flex-1 relative">
+                                <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">search</span>
+                                <input type="text" class="w-full pl-10 pr-4 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary" 
+                                       placeholder="Search by name, email, or department..." id="searchInput">
+                            </div>
+                            
+                            <!-- Filter Pills -->
+                            <div class="flex gap-2 flex-wrap">
+                                <span class="filter-pill active" onclick="filterByStatus('all')" id="filter-all">All</span>
+                                <span class="filter-pill" onclick="filterByStatus('active')" id="filter-active">Active</span>
+                                <span class="filter-pill" onclick="filterByStatus('pending')" id="filter-pending">Pending</span>
+                                <span class="filter-pill" onclick="filterByStatus('inactive')" id="filter-inactive">Inactive</span>
+                            </div>
+                            
+                            <!-- Department Filter -->
+                            <select class="px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20" onchange="filterByDepartment(this.value)">
+                                <option value="all">All Departments</option>
+                                <option value="TM">Top Management</option>
+                                <option value="FIN">Finance</option>
+                                <option value="HR">Human Resources</option>
+                                <option value="IT">IT Department</option>
+                                <option value="OPS">Operations</option>
+                                <option value="LEGAL">Legal Affairs</option>
+                                <option value="PROC">Procurement</option>
+                                <option value="AUDIT">Internal Audit</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Office Heads Table -->
+                    <div class="bg-white rounded-xl border border-slate-200 overflow-hidden">
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-sm">
+                                <thead class="bg-slate-50 border-b border-slate-200">
+                                    <tr>
+                                        <th class="px-6 py-4 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Office Head</th>
+                                        <th class="px-6 py-4 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Department</th>
+                                        <th class="px-6 py-4 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Contact</th>
+                                        <th class="px-6 py-4 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Status</th>
+                                        <th class="px-6 py-4 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Last Active</th>
+                                        <th class="px-6 py-4 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Surveys</th>
+                                        <th class="px-6 py-4 text-right text-xs font-semibold text-slate-500 uppercase tracking-wider">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-slate-200" id="officeHeadsTable">
+                                    <!-- Row 1 -->
+                                    <tr class="table-row-hover" data-status="active" data-department="TM">
+                                        <td class="px-6 py-4">
+                                            <div class="flex items-center gap-3">
+                                                <div class="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary">
+                                                    <span class="material-symbols-outlined text-sm">person</span>
+                                                </div>
+                                                <div>
+                                                    <p class="font-medium">Dr. Maria Santos</p>
+                                                    <p class="text-xs text-slate-500">maria.santos@agency.gov.ph</p>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td class="px-6 py-4">
+                                            <span class="department-badge">Top Management</span>
+                                        </td>
+                                        <td class="px-6 py-4">
+                                            <p class="text-sm">+63 (2) 8123 4567</p>
+                                            <p class="text-xs text-slate-500">Office: 101</p>
+                                        </td>
+                                        <td class="px-6 py-4">
+                                            <span class="status-badge status-active">
+                                                <span class="w-1.5 h-1.5 rounded-full bg-emerald-600"></span>
+                                                Active
+                                            </span>
+                                        </td>
+                                        <td class="px-6 py-4 text-sm">Today, 9:30 AM</td>
+                                        <td class="px-6 py-4">
+                                            <div class="flex items-center gap-2">
+                                                <span class="font-medium">12/15</span>
+                                                <div class="w-16 h-1.5 bg-slate-200 rounded-full overflow-hidden">
+                                                    <div class="bg-primary h-full rounded-full" style="width: 80%"></div>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td class="px-6 py-4 text-right">
+                                            <button class="action-btn" onclick="viewOfficeHead(1)" title="View">
+                                                <span class="material-symbols-outlined text-sm">visibility</span>
+                                            </button>
+                                            <button class="action-btn" onclick="editOfficeHead(1)" title="Edit">
+                                                <span class="material-symbols-outlined text-sm">edit</span>
+                                            </button>
+                                            <button class="action-btn" onclick="resetPassword(1)" title="Reset Password">
+                                                <span class="material-symbols-outlined text-sm">key</span>
+                                            </button>
+                                            <button class="action-btn delete" onclick="toggleStatus(1)" title="Deactivate">
+                                                <span class="material-symbols-outlined text-sm">pause</span>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                    
+                                    <!-- Row 2 -->
+                                    <tr class="table-row-hover" data-status="active" data-department="FIN">
+                                        <td class="px-6 py-4">
+                                            <div class="flex items-center gap-3">
+                                                <div class="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary">
+                                                    <span class="material-symbols-outlined text-sm">person</span>
+                                                </div>
+                                                <div>
+                                                    <p class="font-medium">Juan Dela Cruz</p>
+                                                    <p class="text-xs text-slate-500">juan.delacruz@agency.gov.ph</p>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td class="px-6 py-4">
+                                            <span class="department-badge">Finance & Accounting</span>
+                                        </td>
+                                        <td class="px-6 py-4">
+                                            <p class="text-sm">+63 (2) 8234 5678</p>
+                                            <p class="text-xs text-slate-500">Office: 205</p>
+                                        </td>
+                                        <td class="px-6 py-4">
+                                            <span class="status-badge status-active">
+                                                <span class="w-1.5 h-1.5 rounded-full bg-emerald-600"></span>
+                                                Active
+                                            </span>
+                                        </td>
+                                        <td class="px-6 py-4 text-sm">Yesterday, 2:15 PM</td>
+                                        <td class="px-6 py-4">
+                                            <div class="flex items-center gap-2">
+                                                <span class="font-medium">8/15</span>
+                                                <div class="w-16 h-1.5 bg-slate-200 rounded-full overflow-hidden">
+                                                    <div class="bg-primary h-full rounded-full" style="width: 53%"></div>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td class="px-6 py-4 text-right">
+                                            <button class="action-btn" onclick="viewOfficeHead(2)">
+                                                <span class="material-symbols-outlined text-sm">visibility</span>
+                                            </button>
+                                            <button class="action-btn" onclick="editOfficeHead(2)">
+                                                <span class="material-symbols-outlined text-sm">edit</span>
+                                            </button>
+                                            <button class="action-btn" onclick="resetPassword(2)">
+                                                <span class="material-symbols-outlined text-sm">key</span>
+                                            </button>
+                                            <button class="action-btn delete" onclick="toggleStatus(2)">
+                                                <span class="material-symbols-outlined text-sm">pause</span>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                    
+                                    <!-- Row 3 - Pending -->
+                                    <tr class="table-row-hover" data-status="pending" data-department="HR">
+                                        <td class="px-6 py-4">
+                                            <div class="flex items-center gap-3">
+                                                <div class="w-8 h-8 rounded-full bg-amber-100 flex items-center justify-center text-amber-600">
+                                                    <span class="material-symbols-outlined text-sm">person</span>
+                                                </div>
+                                                <div>
+                                                    <p class="font-medium">Anna Reyes</p>
+                                                    <p class="text-xs text-slate-500">anna.reyes@agency.gov.ph</p>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td class="px-6 py-4">
+                                            <span class="department-badge">Human Resources</span>
+                                        </td>
+                                        <td class="px-6 py-4">
+                                            <p class="text-sm">+63 (2) 8345 6789</p>
+                                            <p class="text-xs text-slate-500">Office: 310</p>
+                                        </td>
+                                        <td class="px-6 py-4">
+                                            <span class="status-badge status-pending">
+                                                <span class="w-1.5 h-1.5 rounded-full bg-amber-600"></span>
+                                                Pending
+                                            </span>
+                                        </td>
+                                        <td class="px-6 py-4 text-sm text-slate-400">Never</td>
+                                        <td class="px-6 py-4">
+                                            <span class="text-slate-400">Not started</span>
+                                        </td>
+                                        <td class="px-6 py-4 text-right">
+                                            <button class="action-btn" onclick="viewOfficeHead(3)">
+                                                <span class="material-symbols-outlined text-sm">visibility</span>
+                                            </button>
+                                            <button class="action-btn" onclick="editOfficeHead(3)">
+                                                <span class="material-symbols-outlined text-sm">edit</span>
+                                            </button>
+                                            <button class="action-btn" onclick="resendInvite(3)" title="Resend Invite">
+                                                <span class="material-symbols-outlined text-sm">mail</span>
+                                            </button>
+                                            <button class="action-btn" onclick="activateNow(3)" title="Activate Now">
+                                                <span class="material-symbols-outlined text-sm">bolt</span>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                    
+                                    <!-- Row 4 - Inactive -->
+                                    <tr class="table-row-hover" data-status="inactive" data-department="IT">
+                                        <td class="px-6 py-4">
+                                            <div class="flex items-center gap-3">
+                                                <div class="w-8 h-8 rounded-full bg-red-100 flex items-center justify-center text-red-600">
+                                                    <span class="material-symbols-outlined text-sm">person_off</span>
+                                                </div>
+                                                <div>
+                                                    <p class="font-medium">Michael Tan</p>
+                                                    <p class="text-xs text-slate-500">michael.tan@agency.gov.ph</p>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td class="px-6 py-4">
+                                            <span class="department-badge">IT Department</span>
+                                        </td>
+                                        <td class="px-6 py-4">
+                                            <p class="text-sm">+63 (2) 8456 7890</p>
+                                            <p class="text-xs text-slate-500">Office: 401</p>
+                                        </td>
+                                        <td class="px-6 py-4">
+                                            <span class="status-badge status-inactive">
+                                                <span class="w-1.5 h-1.5 rounded-full bg-red-600"></span>
+                                                Inactive
+                                            </span>
+                                        </td>
+                                        <td class="px-6 py-4 text-sm">Mar 15, 2024</td>
+                                        <td class="px-6 py-4">
+                                            <span class="text-slate-400">-</span>
+                                        </td>
+                                        <td class="px-6 py-4 text-right">
+                                            <button class="action-btn" onclick="viewOfficeHead(4)">
+                                                <span class="material-symbols-outlined text-sm">visibility</span>
+                                            </button>
+                                            <button class="action-btn" onclick="editOfficeHead(4)">
+                                                <span class="material-symbols-outlined text-sm">edit</span>
+                                            </button>
+                                            <button class="action-btn" onclick="reactivate(4)" title="Reactivate">
+                                                <span class="material-symbols-outlined text-sm">play_arrow</span>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                    
+                                    <!-- Row 5 -->
+                                    <tr class="table-row-hover" data-status="active" data-department="OPS">
+                                        <td class="px-6 py-4">
+                                            <div class="flex items-center gap-3">
+                                                <div class="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary">
+                                                    <span class="material-symbols-outlined text-sm">person</span>
+                                                </div>
+                                                <div>
+                                                    <p class="font-medium">Carla Mercado</p>
+                                                    <p class="text-xs text-slate-500">carla.mercado@agency.gov.ph</p>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td class="px-6 py-4">
+                                            <span class="department-badge">Operations</span>
+                                        </td>
+                                        <td class="px-6 py-4">
+                                            <p class="text-sm">+63 (2) 8567 8901</p>
+                                            <p class="text-xs text-slate-500">Office: 507</p>
+                                        </td>
+                                        <td class="px-6 py-4">
+                                            <span class="status-badge status-active">
+                                                <span class="w-1.5 h-1.5 rounded-full bg-emerald-600"></span>
+                                                Active
+                                            </span>
+                                        </td>
+                                        <td class="px-6 py-4 text-sm">Today, 11:20 AM</td>
+                                        <td class="px-6 py-4">
+                                            <div class="flex items-center gap-2">
+                                                <span class="font-medium">15/15</span>
+                                                <div class="w-16 h-1.5 bg-slate-200 rounded-full overflow-hidden">
+                                                    <div class="bg-emerald-500 h-full rounded-full" style="width: 100%"></div>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td class="px-6 py-4 text-right">
+                                            <button class="action-btn" onclick="viewOfficeHead(5)">
+                                                <span class="material-symbols-outlined text-sm">visibility</span>
+                                            </button>
+                                            <button class="action-btn" onclick="editOfficeHead(5)">
+                                                <span class="material-symbols-outlined text-sm">edit</span>
+                                            </button>
+                                            <button class="action-btn" onclick="resetPassword(5)">
+                                                <span class="material-symbols-outlined text-sm">key</span>
+                                            </button>
+                                            <button class="action-btn delete" onclick="toggleStatus(5)">
+                                                <span class="material-symbols-outlined text-sm">pause</span>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        
+                        <!-- Pagination -->
+                        <div class="px-6 py-4 border-t border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-4">
+                            <p class="text-sm text-slate-500">Showing 1 to 5 of 24 office heads</p>
+                            <div class="flex gap-2">
+                                <button class="px-3 py-1 border border-slate-300 rounded text-sm disabled:opacity-50" disabled>Previous</button>
+                                <button class="px-3 py-1 bg-primary text-white rounded text-sm">1</button>
+                                <button class="px-3 py-1 border border-slate-300 rounded text-sm hover:bg-slate-50">2</button>
+                                <button class="px-3 py-1 border border-slate-300 rounded text-sm hover:bg-slate-50">3</button>
+                                <button class="px-3 py-1 border border-slate-300 rounded text-sm hover:bg-slate-50">4</button>
+                                <button class="px-3 py-1 border border-slate-300 rounded text-sm hover:bg-slate-50">Next</button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Quick Actions Section -->
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
+                        <div class="bg-white rounded-xl border border-slate-200 p-5">
+                            <div class="flex items-center gap-3 mb-3">
+                                <div class="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center text-primary">
+                                    <span class="material-symbols-outlined">mail</span>
+                                </div>
+                                <h3 class="font-medium">Bulk Invite</h3>
+                            </div>
+                            <p class="text-xs text-slate-500 mb-3">Send invitation emails to multiple office heads at once</p>
+                            <button class="text-primary text-sm font-medium flex items-center gap-1 hover:underline" onclick="bulkInvite()">
+                                Send Invites
+                                <span class="material-symbols-outlined text-sm">arrow_forward</span>
+                            </button>
+                        </div>
+                        
+                        <div class="bg-white rounded-xl border border-slate-200 p-5">
+                            <div class="flex items-center gap-3 mb-3">
+                                <div class="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center text-primary">
+                                    <span class="material-symbols-outlined">upload_file</span>
+                                </div>
+                                <h3 class="font-medium">Import from CSV</h3>
+                            </div>
+                            <p class="text-xs text-slate-500 mb-3">Bulk import office heads using CSV file</p>
+                            <button class="text-primary text-sm font-medium flex items-center gap-1 hover:underline" onclick="importCSV()">
+                                Import
+                                <span class="material-symbols-outlined text-sm">arrow_forward</span>
+                            </button>
+                        </div>
+                        
+                        <div class="bg-white rounded-xl border border-slate-200 p-5">
+                            <div class="flex items-center gap-3 mb-3">
+                                <div class="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center text-primary">
+                                    <span class="material-symbols-outlined">description</span>
+                                </div>
+                                <h3 class="font-medium">Generate Report</h3>
+                            </div>
+                            <p class="text-xs text-slate-500 mb-3">Export list of office heads with activity summary</p>
+                            <button class="text-primary text-sm font-medium flex items-center gap-1 hover:underline" onclick="generateReport()">
+                                Generate
+                                <span class="material-symbols-outlined text-sm">arrow_forward</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Add/Edit Office Head Modal -->
+    <div id="officeHeadModal" class="fixed inset-0 bg-black/50 z-50 hidden flex items-center justify-center modal">
+        <div class="bg-white rounded-xl max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+            <div class="p-6 border-b border-slate-200 flex justify-between items-center sticky top-0 bg-white">
+                <h2 class="text-xl font-bold" id="modalTitle">Add New Office Head</h2>
+                <button class="p-1 hover:bg-slate-100 rounded" onclick="closeModal()">
+                    <span class="material-symbols-outlined">close</span>
+                </button>
+            </div>
+            
+            <div class="p-6">
+                <form id="officeHeadForm">
+                    <!-- Basic Information -->
+                    <div class="mb-6">
+                        <h3 class="text-sm font-semibold text-primary mb-3">Basic Information</h3>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-slate-700 mb-1">First Name</label>
+                                <input type="text" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm" placeholder="Enter first name">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-slate-700 mb-1">Last Name</label>
+                                <input type="text" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm" placeholder="Enter last name">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Account Information -->
+                    <div class="mb-6">
+                        <h3 class="text-sm font-semibold text-primary mb-3">Account Information</h3>
+                        <div class="space-y-4">
+                            <div>
+                                <label class="block text-sm font-medium text-slate-700 mb-1">Email Address</label>
+                                <input type="email" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm" placeholder="email@agency.gov.ph">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-slate-700 mb-1">Username</label>
+                                <input type="text" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm" placeholder="username">
+                            </div>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-sm font-medium text-slate-700 mb-1">Password</label>
+                                    <input type="password" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm" placeholder="••••••••">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-slate-700 mb-1">Confirm Password</label>
+                                    <input type="password" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm" placeholder="••••••••">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Department Information -->
+                    <div class="mb-6">
+                        <h3 class="text-sm font-semibold text-primary mb-3">Department Information</h3>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-slate-700 mb-1">Department</label>
+                                <select class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm">
+                                    <option value="">Select Department</option>
+                                    <option value="TM">Top Management</option>
+                                    <option value="FIN">Finance & Accounting</option>
+                                    <option value="HR">Human Resources</option>
+                                    <option value="IT">IT Department</option>
+                                    <option value="OPS">Operations</option>
+                                    <option value="LEGAL">Legal Affairs</option>
+                                    <option value="PROC">Procurement</option>
+                                    <option value="AUDIT">Internal Audit</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-slate-700 mb-1">Position/Title</label>
+                                <input type="text" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm" placeholder="e.g., Department Head">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-slate-700 mb-1">Office/Room Number</label>
+                                <input type="text" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm" placeholder="e.g., 101">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-slate-700 mb-1">Phone Number</label>
+                                <input type="text" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm" placeholder="+63 (2) XXX XXXX">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Account Status -->
+                    <div class="mb-6">
+                        <h3 class="text-sm font-semibold text-primary mb-3">Account Status</h3>
+                        <div class="flex items-center gap-6">
+                            <label class="flex items-center gap-2">
+                                <input type="radio" name="status" value="active" class="text-primary" checked>
+                                <span class="text-sm">Active</span>
+                            </label>
+                            <label class="flex items-center gap-2">
+                                <input type="radio" name="status" value="pending" class="text-primary">
+                                <span class="text-sm">Pending (send invite)</span>
+                            </label>
+                            <label class="flex items-center gap-2">
+                                <input type="radio" name="status" value="inactive" class="text-primary">
+                                <span class="text-sm">Inactive</span>
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <!-- Send Notification -->
+                    <div class="mb-6">
+                        <label class="flex items-center gap-2">
+                            <input type="checkbox" class="text-primary rounded" checked>
+                            <span class="text-sm">Send welcome email with login credentials</span>
+                        </label>
+                    </div>
+                </form>
+            </div>
+            
+            <div class="p-6 border-t border-slate-200 flex justify-end gap-3">
+                <button class="px-4 py-2 border border-slate-300 rounded-lg text-sm font-medium hover:bg-slate-50" onclick="closeModal()">
+                    Cancel
+                </button>
+                <button class="px-4 py-2 bg-primary text-white rounded-lg text-sm font-semibold hover:bg-primary/90" onclick="saveOfficeHead()">
+                    Save Office Head
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- View Office Head Modal -->
+    <div id="viewOfficeHeadModal" class="fixed inset-0 bg-black/50 z-50 hidden flex items-center justify-center modal">
+        <div class="bg-white rounded-xl max-w-2xl w-full mx-4">
+            <div class="p-6 border-b border-slate-200 flex justify-between items-center">
+                <h2 class="text-xl font-bold">Office Head Details</h2>
+                <button class="p-1 hover:bg-slate-100 rounded" onclick="closeViewModal()">
+                    <span class="material-symbols-outlined">close</span>
+                </button>
+            </div>
+            
+            <div class="p-6">
+                <div class="flex items-center gap-4 mb-6">
+                    <div class="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center text-primary">
+                        <span class="material-symbols-outlined text-3xl">person</span>
+                    </div>
+                    <div>
+                        <h3 class="text-xl font-bold" id="viewName">Dr. Maria Santos</h3>
+                        <p class="text-slate-500" id="viewEmail">maria.santos@agency.gov.ph</p>
+                    </div>
+                    <span class="status-badge status-active ml-auto" id="viewStatus">Active</span>
+                </div>
+                
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="bg-slate-50 p-3 rounded-lg">
+                        <p class="text-xs text-slate-500">Department</p>
+                        <p class="font-medium" id="viewDept">Top Management</p>
+                    </div>
+                    <div class="bg-slate-50 p-3 rounded-lg">
+                        <p class="text-xs text-slate-500">Position</p>
+                        <p class="font-medium" id="viewPosition">Department Head</p>
+                    </div>
+                    <div class="bg-slate-50 p-3 rounded-lg">
+                        <p class="text-xs text-slate-500">Office</p>
+                        <p class="font-medium" id="viewOffice">Room 101</p>
+                    </div>
+                    <div class="bg-slate-50 p-3 rounded-lg">
+                        <p class="text-xs text-slate-500">Phone</p>
+                        <p class="font-medium" id="viewPhone">+63 (2) 8123 4567</p>
+                    </div>
+                    <div class="bg-slate-50 p-3 rounded-lg">
+                        <p class="text-xs text-slate-500">Username</p>
+                        <p class="font-medium" id="viewUsername">maria.santos</p>
+                    </div>
+                    <div class="bg-slate-50 p-3 rounded-lg">
+                        <p class="text-xs text-slate-500">Last Active</p>
+                        <p class="font-medium" id="viewLastActive">Today, 9:30 AM</p>
+                    </div>
+                </div>
+                
+                <div class="mt-6">
+                    <h4 class="font-medium mb-3">Survey Completion Summary</h4>
+                    <div class="space-y-3">
+                        <div>
+                            <div class="flex justify-between text-sm mb-1">
+                                <span>Annual Risk Assessment 2024</span>
+                                <span class="font-medium">Completed</span>
+                            </div>
+                            <div class="w-full h-1.5 bg-slate-200 rounded-full overflow-hidden">
+                                <div class="bg-emerald-500 h-full rounded-full" style="width: 100%"></div>
+                            </div>
+                        </div>
+                        <div>
+                            <div class="flex justify-between text-sm mb-1">
+                                <span>Internal Control Questionnaire</span>
+                                <span class="font-medium">8/15</span>
+                            </div>
+                            <div class="w-full h-1.5 bg-slate-200 rounded-full overflow-hidden">
+                                <div class="bg-primary h-full rounded-full" style="width: 53%"></div>
+                            </div>
+                        </div>
+                        <div>
+                            <div class="flex justify-between text-sm mb-1">
+                                <span>Compliance Assessment</span>
+                                <span class="font-medium">Not Started</span>
+                            </div>
+                            <div class="w-full h-1.5 bg-slate-200 rounded-full overflow-hidden">
+                                <div class="bg-slate-300 h-full rounded-full" style="width: 0%"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="p-6 border-t border-slate-200 flex justify-end gap-3">
+                <button class="px-4 py-2 border border-slate-300 rounded-lg text-sm font-medium hover:bg-slate-50" onclick="closeViewModal()">
+                    Close
+                </button>
+                <button class="px-4 py-2 bg-primary text-white rounded-lg text-sm font-semibold hover:bg-primary/90" onclick="editFromView()">
+                    Edit
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Reset Password Confirmation Modal -->
+    <div id="resetPasswordModal" class="fixed inset-0 bg-black/50 z-50 hidden flex items-center justify-center modal">
+        <div class="bg-white rounded-xl max-w-md w-full mx-4 p-6">
+            <div class="flex items-center gap-3 mb-4">
+                <div class="w-10 h-10 rounded-full bg-amber-100 flex items-center justify-center text-amber-600">
+                    <span class="material-symbols-outlined">key</span>
+                </div>
+                <h3 class="text-lg font-bold">Reset Password</h3>
+            </div>
+            
+            <p class="text-sm text-slate-600 mb-4">This will reset the password for <span class="font-medium" id="resetUserEmail">maria.santos@agency.gov.ph</span>. A temporary password will be sent to their email.</p>
+            
+            <div class="flex gap-3 justify-end">
+                <button class="px-4 py-2 border border-slate-300 rounded-lg text-sm font-medium hover:bg-slate-50" onclick="closeResetModal()">
+                    Cancel
+                </button>
+                <button class="px-4 py-2 bg-amber-600 text-white rounded-lg text-sm font-semibold hover:bg-amber-700" onclick="confirmReset()">
+                    Reset Password
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Toggle department selection in modal
+        function toggleDeptSelection(show) {
+            // Already handled inline
+        }
+
+        // Open Add Modal
+        function openAddModal() {
+            document.getElementById('modalTitle').textContent = 'Add New Office Head';
+            document.getElementById('officeHeadModal').classList.remove('hidden');
+        }
+
+        // Close Modal
+        function closeModal() {
+            document.getElementById('officeHeadModal').classList.add('hidden');
+        }
+
+        // Close View Modal
+        function closeViewModal() {
+            document.getElementById('viewOfficeHeadModal').classList.add('hidden');
+        }
+
+        // Close Reset Modal
+        function closeResetModal() {
+            document.getElementById('resetPasswordModal').classList.add('hidden');
+        }
+
+        // View Office Head
+        function viewOfficeHead(id) {
+            // In production, fetch data based on ID
+            document.getElementById('viewOfficeHeadModal').classList.remove('hidden');
+        }
+
+        // Edit Office Head
+        function editOfficeHead(id) {
+            document.getElementById('modalTitle').textContent = 'Edit Office Head';
+            // Populate form with data
+            document.getElementById('officeHeadModal').classList.remove('hidden');
+        }
+
+        // Edit from view modal
+        function editFromView() {
+            closeViewModal();
+            editOfficeHead(1);
+        }
+
+        // Reset Password
+        function resetPassword(id) {
+            document.getElementById('resetPasswordModal').classList.remove('hidden');
+        }
+
+        // Confirm Reset
+        function confirmReset() {
+            alert('Password reset email sent successfully!');
+            closeResetModal();
+        }
+
+        // Resend Invite
+        function resendInvite(id) {
+            alert('Invitation email resent to the office head.');
+        }
+
+        // Activate Now
+        function activateNow(id) {
+            if (confirm('Activate this account now?')) {
+                alert('Account activated successfully!');
+            }
+        }
+
+        // Reactivate
+        function reactivate(id) {
+            if (confirm('Reactivate this account?')) {
+                alert('Account reactivated successfully!');
+            }
+        }
+
+        // Toggle Status (Active/Inactive)
+        function toggleStatus(id) {
+            if (confirm('Change account status?')) {
+                alert('Status updated successfully!');
+            }
+        }
+
+        // Save Office Head
+        function saveOfficeHead() {
+            alert('Office head saved successfully!');
+            closeModal();
+        }
+
+        // Filter by Status
+        function filterByStatus(status) {
+            // Update active pill
+            document.querySelectorAll('.filter-pill').forEach(pill => {
+                pill.classList.remove('active');
+            });
+            document.getElementById(`filter-${status}`).classList.add('active');
+            
+            // Filter table rows
+            const rows = document.querySelectorAll('#officeHeadsTable tr');
+            rows.forEach(row => {
+                if (status === 'all' || row.dataset.status === status) {
+                    row.style.display = '';
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+        }
+
+        // Filter by Department
+        function filterByDepartment(dept) {
+            const rows = document.querySelectorAll('#officeHeadsTable tr');
+            rows.forEach(row => {
+                if (dept === 'all' || row.dataset.department === dept) {
+                    row.style.display = '';
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+        }
+
+        // Search functionality
+        document.getElementById('searchInput').addEventListener('keyup', function(e) {
+            const searchTerm = e.target.value.toLowerCase();
+            const rows = document.querySelectorAll('#officeHeadsTable tr');
+            
+            rows.forEach(row => {
+                const text = row.textContent.toLowerCase();
+                if (text.includes(searchTerm)) {
+                    row.style.display = '';
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+        });
+
+        // Export Data
+        function exportData() {
+            alert('Exporting office heads data...');
+        }
+
+        // Bulk Invite
+        function bulkInvite() {
+            alert('Bulk invite functionality - would open CSV upload or email list input');
+        }
+
+        // Import CSV
+        function importCSV() {
+            alert('Import CSV functionality - would open file picker');
+        }
+
+        // Generate Report
+        function generateReport() {
+            alert('Generating office heads report...');
+        }
+
+        // Department pill selection
+        document.querySelectorAll('.dept-pill').forEach(pill => {
+            pill.addEventListener('click', function() {
+                this.classList.toggle('selected');
+                const checkbox = this.querySelector('input');
+                if (checkbox) checkbox.checked = !checkbox.checked;
+            });
+        });
+    </script>
+    <%- include('../partials/scripts') %>
+</body>
+</html>

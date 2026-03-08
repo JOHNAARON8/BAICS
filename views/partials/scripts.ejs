@@ -1,0 +1,41 @@
+<script>
+    (function() {
+        const menuToggle = document.getElementById('menuToggle');
+        const closeSidebar = document.getElementById('closeSidebar');
+        const sidebar = document.getElementById('sidebar');
+        const overlay = document.getElementById('mobileMenuOverlay');
+        
+        function openSidebar() {
+            if (sidebar) sidebar.classList.remove('-translate-x-full');
+            if (overlay) overlay.classList.remove('hidden');
+            document.body.classList.add('mobile-menu-open');
+        }
+        
+        function closeSidebarMenu() {
+            if (sidebar) sidebar.classList.add('-translate-x-full');
+            if (overlay) overlay.classList.add('hidden');
+            document.body.classList.remove('mobile-menu-open');
+        }
+        
+        if (menuToggle) {
+            menuToggle.addEventListener('click', openSidebar);
+        }
+        
+        if (closeSidebar) {
+            closeSidebar.addEventListener('click', closeSidebarMenu);
+        }
+        
+        if (overlay) {
+            overlay.addEventListener('click', closeSidebarMenu);
+        }
+        
+        // Handle window resize
+        window.addEventListener('resize', function() {
+            if (window.innerWidth >= 1024) { // lg breakpoint
+                if (sidebar) sidebar.classList.remove('-translate-x-full');
+                if (overlay) overlay.classList.add('hidden');
+                document.body.classList.remove('mobile-menu-open');
+            }
+        });
+    })();
+</script>

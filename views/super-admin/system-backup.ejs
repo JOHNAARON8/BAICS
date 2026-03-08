@@ -1,0 +1,995 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <%- include('../partials/head', { title: 'System Backup' }) %>
+    <style>
+        .backup-card {
+            transition: all 0.2s ease;
+            border: 1px solid #e2e8f0;
+        }
+        .backup-card:hover {
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            border-color: #1d3e8b;
+        }
+        .status-badge {
+            padding: 4px 10px;
+            border-radius: 30px;
+            font-size: 11px;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .status-completed {
+            background: #dcfce7;
+            color: #166534;
+        }
+        .status-in-progress {
+            background: #fef3c7;
+            color: #92400e;
+        }
+        .status-failed {
+            background: #fee2e2;
+            color: #b91c1c;
+        }
+        .status-pending {
+            background: #e2e8f0;
+            color: #475569;
+        }
+        .backup-type-badge {
+            padding: 2px 8px;
+            border-radius: 30px;
+            font-size: 10px;
+            font-weight: 500;
+        }
+        .type-database {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+        .type-files {
+            background: #f3e8ff;
+            color: #6b21a8;
+        }
+        .type-full {
+            background: #dcfce7;
+            color: #166534;
+        }
+        .progress-bar {
+            height: 8px;
+            border-radius: 4px;
+            background: #e2e8f0;
+            overflow: hidden;
+        }
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #1d3e8b, #2a4a9c);
+            transition: width 0.3s ease;
+        }
+        .storage-bar {
+            height: 6px;
+            border-radius: 3px;
+            background: #e2e8f0;
+            overflow: hidden;
+        }
+        .storage-used {
+            height: 100%;
+            background: #1d3e8b;
+        }
+        .storage-warning {
+            background: #f59e0b;
+        }
+        .storage-critical {
+            background: #ef4444;
+        }
+        .schedule-card {
+            border-left: 4px solid transparent;
+        }
+        .schedule-card.active {
+            border-left-color: #1d3e8b;
+            background: #f8fafc;
+        }
+        .tab-button {
+            padding: 10px 16px;
+            font-weight: 500;
+            font-size: 14px;
+            border-bottom: 2px solid transparent;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .tab-button.active {
+            border-bottom-color: #1d3e8b;
+            color: #1d3e8b;
+            font-weight: 600;
+        }
+        .tab-button:hover:not(.active) {
+            color: #1d3e8b;
+            background: #f8fafc;
+        }
+        .restore-modal {
+            transition: opacity 0.2s ease;
+        }
+        .restore-modal.hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body class="bg-[#f8fafc] dark:bg-background-dark font-display">
+    <!-- Mobile Menu Overlay -->
+    <div id="mobileMenuOverlay" class="fixed inset-0 bg-black/50 z-40 hidden lg:hidden"></div>
+
+    <div class="flex h-screen overflow-hidden">
+        <!-- Sidebar -->
+        <%- include('../partials/sidebar', { 
+            role: 'super-admin', 
+            currentPage: 'system-backup',
+            user: user 
+        }) %>
+
+        <!-- Main Content -->
+        <main class="flex-1 flex flex-col min-w-0 h-screen overflow-hidden bg-[#f8fafc] dark:bg-background-dark">
+            <!-- Header -->
+            <%- include('../partials/header', { 
+                role: 'super-admin', 
+                pageTitle: 'System Backup',
+                user: user 
+            }) %>
+
+            <!-- Scrollable Content -->
+            <div class="flex-1 overflow-y-auto custom-scrollbar p-6 lg:p-8">
+                <div class="max-w-7xl mx-auto">
+                    <!-- Header with Actions -->
+                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+                        <div>
+                            <h1 class="text-2xl lg:text-3xl font-bold text-slate-800">System Backup & Recovery</h1>
+                            <p class="text-sm text-slate-500 mt-1">Manage database and file backups, schedule automatic backups, and restore when needed</p>
+                        </div>
+                        <div class="flex gap-3">
+                            <button class="px-4 py-2 border border-slate-300 rounded-lg text-sm font-medium hover:bg-slate-50 flex items-center gap-2" onclick="viewBackupLogs()">
+                                <span class="material-symbols-outlined text-sm">history</span>
+                                Backup Logs
+                            </button>
+                            <button class="px-4 py-2 bg-primary text-white rounded-lg text-sm font-semibold flex items-center gap-2 shadow-md hover:bg-primary/90" onclick="startBackupNow()">
+                                <span class="material-symbols-outlined text-sm">backup</span>
+                                Backup Now
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Storage Overview -->
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+                        <!-- Storage Usage -->
+                        <div class="bg-white rounded-xl border border-slate-200 p-5 lg:col-span-2">
+                            <h3 class="font-bold text-base mb-4 flex items-center gap-2">
+                                <span class="material-symbols-outlined text-primary">storage</span>
+                                Backup Storage Usage
+                            </h3>
+                            <div class="flex items-center gap-4 mb-4">
+                                <div class="flex-1">
+                                    <div class="flex justify-between text-sm mb-1">
+                                        <span class="text-slate-600">Used Storage</span>
+                                        <span class="font-medium">124.5 GB / 500 GB</span>
+                                    </div>
+                                    <div class="storage-bar">
+                                        <div class="storage-used" style="width: 24.9%"></div>
+                                    </div>
+                                </div>
+                                <span class="text-sm font-medium text-emerald-600">24.9% used</span>
+                            </div>
+                            <div class="grid grid-cols-3 gap-4 mt-4">
+                                <div class="text-center">
+                                    <p class="text-2xl font-bold text-primary">156</p>
+                                    <p class="text-xs text-slate-500">Total Backups</p>
+                                </div>
+                                <div class="text-center">
+                                    <p class="text-2xl font-bold text-emerald-600">124.5 GB</p>
+                                    <p class="text-xs text-slate-500">Total Size</p>
+                                </div>
+                                <div class="text-center">
+                                    <p class="text-2xl font-bold text-amber-600">375.5 GB</p>
+                                    <p class="text-xs text-slate-500">Free Space</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Quick Stats -->
+                        <div class="bg-white rounded-xl border border-slate-200 p-5">
+                            <h3 class="font-bold text-base mb-4 flex items-center gap-2">
+                                <span class="material-symbols-outlined text-primary">insights</span>
+                                Backup Statistics
+                            </h3>
+                            <div class="space-y-3">
+                                <div class="flex justify-between items-center">
+                                    <span class="text-sm text-slate-600">Last Backup</span>
+                                    <span class="text-sm font-medium">Today, 03:00 AM</span>
+                                </div>
+                                <div class="flex justify-between items-center">
+                                    <span class="text-sm text-slate-600">Next Scheduled</span>
+                                    <span class="text-sm font-medium">Tomorrow, 03:00 AM</span>
+                                </div>
+                                <div class="flex justify-between items-center">
+                                    <span class="text-sm text-slate-600">Success Rate</span>
+                                    <span class="text-sm font-medium text-emerald-600">99.2%</span>
+                                </div>
+                                <div class="flex justify-between items-center">
+                                    <span class="text-sm text-slate-600">Average Size</span>
+                                    <span class="text-sm font-medium">845 MB</span>
+                                </div>
+                                <div class="pt-3 mt-3 border-t border-slate-100">
+                                    <div class="flex justify-between items-center">
+                                        <span class="text-sm text-slate-600">Retention Period</span>
+                                        <span class="text-sm font-medium">30 days</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Tabs -->
+                    <div class="border-b border-slate-200 mb-6">
+                        <div class="flex gap-6">
+                            <button class="tab-button active" onclick="switchTab('backups')" id="tab-backups">Backup History</button>
+                            <button class="tab-button" onclick="switchTab('schedule')" id="tab-schedule">Schedule Settings</button>
+                            <button class="tab-button" onclick="switchTab('restore')" id="tab-restore">Restore Points</button>
+                            <button class="tab-button" onclick="switchTab('settings')" id="tab-settings">Backup Settings</button>
+                        </div>
+                    </div>
+
+                    <!-- Tab: Backup History -->
+                    <div id="tab-backups-content" class="tab-content">
+                        <!-- Filters -->
+                        <div class="bg-white rounded-xl border border-slate-200 p-4 mb-6">
+                            <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                                <div>
+                                    <label class="block text-xs font-medium text-slate-500 mb-1">Date Range</label>
+                                    <select class="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm">
+                                        <option>Last 7 days</option>
+                                        <option>Last 30 days</option>
+                                        <option>Last 90 days</option>
+                                        <option>All time</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-medium text-slate-500 mb-1">Backup Type</label>
+                                    <select class="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm">
+                                        <option>All Types</option>
+                                        <option>Database Only</option>
+                                        <option>Files Only</option>
+                                        <option>Full System</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-medium text-slate-500 mb-1">Status</label>
+                                    <select class="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm">
+                                        <option>All Status</option>
+                                        <option>Completed</option>
+                                        <option>In Progress</option>
+                                        <option>Failed</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-medium text-slate-500 mb-1">Search</label>
+                                    <input type="text" class="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm" placeholder="Search backups...">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Backups Table -->
+                        <div class="bg-white rounded-xl border border-slate-200 overflow-hidden">
+                            <div class="overflow-x-auto">
+                                <table class="w-full text-sm">
+                                    <thead class="bg-slate-50 border-b border-slate-200">
+                                        <tr>
+                                            <th class="px-6 py-4 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Backup Name</th>
+                                            <th class="px-6 py-4 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Type</th>
+                                            <th class="px-6 py-4 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Date Created</th>
+                                            <th class="px-6 py-4 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Size</th>
+                                            <th class="px-6 py-4 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Status</th>
+                                            <th class="px-6 py-4 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Location</th>
+                                            <th class="px-6 py-4 text-right text-xs font-semibold text-slate-500 uppercase tracking-wider">Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody class="divide-y divide-slate-200">
+                                        <!-- Today's backups -->
+                                        <tr class="hover:bg-slate-50 transition-colors">
+                                            <td class="px-6 py-4">
+                                                <div>
+                                                    <p class="font-medium">full_backup_20250415_0300</p>
+                                                    <p class="text-xs text-slate-500">Including database & files</p>
+                                                </div>
+                                            </td>
+                                            <td class="px-6 py-4">
+                                                <span class="backup-type-badge type-full">Full System</span>
+                                            </td>
+                                            <td class="px-6 py-4 text-sm">2024-04-15 03:00:15</td>
+                                            <td class="px-6 py-4 text-sm">1.2 GB</td>
+                                            <td class="px-6 py-4">
+                                                <span class="status-badge status-completed">
+                                                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-600"></span>
+                                                    Completed
+                                                </span>
+                                            </td>
+                                            <td class="px-6 py-4 text-sm font-mono">/backups/full/</td>
+                                            <td class="px-6 py-4 text-right">
+                                                <button class="action-btn" onclick="downloadBackup(1)" title="Download">
+                                                    <span class="material-symbols-outlined text-sm">download</span>
+                                                </button>
+                                                <button class="action-btn" onclick="restoreBackup(1)" title="Restore">
+                                                    <span class="material-symbols-outlined text-sm">restore</span>
+                                                </button>
+                                                <button class="action-btn" onclick="verifyBackup(1)" title="Verify">
+                                                    <span class="material-symbols-outlined text-sm">verified</span>
+                                                </button>
+                                                <button class="action-btn delete" onclick="deleteBackup(1)" title="Delete">
+                                                    <span class="material-symbols-outlined text-sm">delete</span>
+                                                </button>
+                                            </td>
+                                        </tr>
+
+                                        <!-- Database backup -->
+                                        <tr class="hover:bg-slate-50 transition-colors">
+                                            <td class="px-6 py-4">
+                                                <div>
+                                                    <p class="font-medium">db_backup_20250414_2300</p>
+                                                    <p class="text-xs text-slate-500">MySQL database dump</p>
+                                                </div>
+                                            </td>
+                                            <td class="px-6 py-4">
+                                                <span class="backup-type-badge type-database">Database</span>
+                                            </td>
+                                            <td class="px-6 py-4 text-sm">2024-04-14 23:00:30</td>
+                                            <td class="px-6 py-4 text-sm">845 MB</td>
+                                            <td class="px-6 py-4">
+                                                <span class="status-badge status-completed">
+                                                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-600"></span>
+                                                    Completed
+                                                </span>
+                                            </td>
+                                            <td class="px-6 py-4 text-sm font-mono">/backups/db/</td>
+                                            <td class="px-6 py-4 text-right">
+                                                <button class="action-btn" onclick="downloadBackup(2)">
+                                                    <span class="material-symbols-outlined text-sm">download</span>
+                                                </button>
+                                                <button class="action-btn" onclick="restoreBackup(2)">
+                                                    <span class="material-symbols-outlined text-sm">restore</span>
+                                                </button>
+                                                <button class="action-btn" onclick="verifyBackup(2)">
+                                                    <span class="material-symbols-outlined text-sm">verified</span>
+                                                </button>
+                                                <button class="action-btn delete" onclick="deleteBackup(2)">
+                                                    <span class="material-symbols-outlined text-sm">delete</span>
+                                                </button>
+                                            </td>
+                                        </tr>
+
+                                        <!-- Files backup -->
+                                        <tr class="hover:bg-slate-50 transition-colors">
+                                            <td class="px-6 py-4">
+                                                <div>
+                                                    <p class="font-medium">files_backup_20250414_1900</p>
+                                                    <p class="text-xs text-slate-500">Uploads and documents</p>
+                                                </div>
+                                            </td>
+                                            <td class="px-6 py-4">
+                                                <span class="backup-type-badge type-files">Files</span>
+                                            </td>
+                                            <td class="px-6 py-4 text-sm">2024-04-14 19:00:45</td>
+                                            <td class="px-6 py-4 text-sm">2.1 GB</td>
+                                            <td class="px-6 py-4">
+                                                <span class="status-badge status-completed">
+                                                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-600"></span>
+                                                    Completed
+                                                </span>
+                                            </td>
+                                            <td class="px-6 py-4 text-sm font-mono">/backups/files/</td>
+                                            <td class="px-6 py-4 text-right">
+                                                <button class="action-btn" onclick="downloadBackup(3)">
+                                                    <span class="material-symbols-outlined text-sm">download</span>
+                                                </button>
+                                                <button class="action-btn" onclick="restoreBackup(3)">
+                                                    <span class="material-symbols-outlined text-sm">restore</span>
+                                                </button>
+                                                <button class="action-btn" onclick="verifyBackup(3)">
+                                                    <span class="material-symbols-outlined text-sm">verified</span>
+                                                </button>
+                                                <button class="action-btn delete" onclick="deleteBackup(3)">
+                                                    <span class="material-symbols-outlined text-sm">delete</span>
+                                                </button>
+                                            </td>
+                                        </tr>
+
+                                        <!-- In progress backup -->
+                                        <tr class="hover:bg-slate-50 transition-colors bg-blue-50/30">
+                                            <td class="px-6 py-4">
+                                                <div>
+                                                    <p class="font-medium">incremental_backup_20250414_1500</p>
+                                                    <p class="text-xs text-slate-500">Incremental changes</p>
+                                                </div>
+                                            </td>
+                                            <td class="px-6 py-4">
+                                                <span class="backup-type-badge type-database">Database</span>
+                                            </td>
+                                            <td class="px-6 py-4 text-sm">2024-04-14 15:00:20</td>
+                                            <td class="px-6 py-4 text-sm">156 MB</td>
+                                            <td class="px-6 py-4">
+                                                <span class="status-badge status-in-progress">
+                                                    <span class="w-1.5 h-1.5 rounded-full bg-amber-600"></span>
+                                                    In Progress
+                                                </span>
+                                            </td>
+                                            <td class="px-6 py-4 text-sm font-mono">/backups/temp/</td>
+                                            <td class="px-6 py-4 text-right">
+                                                <span class="text-xs text-slate-400">Processing...</span>
+                                            </td>
+                                        </tr>
+
+                                        <!-- Failed backup -->
+                                        <tr class="hover:bg-slate-50 transition-colors">
+                                            <td class="px-6 py-4">
+                                                <div>
+                                                    <p class="font-medium">full_backup_20250413_0300</p>
+                                                    <p class="text-xs text-slate-500">Failed - Connection timeout</p>
+                                                </div>
+                                            </td>
+                                            <td class="px-6 py-4">
+                                                <span class="backup-type-badge type-full">Full System</span>
+                                            </td>
+                                            <td class="px-6 py-4 text-sm">2024-04-13 03:00:10</td>
+                                            <td class="px-6 py-4 text-sm">-</td>
+                                            <td class="px-6 py-4">
+                                                <span class="status-badge status-failed">
+                                                    <span class="w-1.5 h-1.5 rounded-full bg-red-600"></span>
+                                                    Failed
+                                                </span>
+                                            </td>
+                                            <td class="px-6 py-4 text-sm font-mono">-</td>
+                                            <td class="px-6 py-4 text-right">
+                                                <button class="action-btn" onclick="retryBackup(5)" title="Retry">
+                                                    <span class="material-symbols-outlined text-sm">refresh</span>
+                                                </button>
+                                                <button class="action-btn delete" onclick="deleteBackup(5)" title="Delete">
+                                                    <span class="material-symbols-outlined text-sm">delete</span>
+                                                </button>
+                                            </td>
+                                        </tr>
+
+                                        <!-- Older backup -->
+                                        <tr class="hover:bg-slate-50 transition-colors">
+                                            <td class="px-6 py-4">
+                                                <div>
+                                                    <p class="font-medium">weekly_backup_20250412_0300</p>
+                                                    <p class="text-xs text-slate-500">Weekly full backup</p>
+                                                </div>
+                                            </td>
+                                            <td class="px-6 py-4">
+                                                <span class="backup-type-badge type-full">Full System</span>
+                                            </td>
+                                            <td class="px-6 py-4 text-sm">2024-04-12 03:00:30</td>
+                                            <td class="px-6 py-4 text-sm">1.1 GB</td>
+                                            <td class="px-6 py-4">
+                                                <span class="status-badge status-completed">
+                                                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-600"></span>
+                                                    Completed
+                                                </span>
+                                            </td>
+                                            <td class="px-6 py-4 text-sm font-mono">/backups/full/</td>
+                                            <td class="px-6 py-4 text-right">
+                                                <button class="action-btn" onclick="downloadBackup(6)">
+                                                    <span class="material-symbols-outlined text-sm">download</span>
+                                                </button>
+                                                <button class="action-btn" onclick="restoreBackup(6)">
+                                                    <span class="material-symbols-outlined text-sm">restore</span>
+                                                </button>
+                                                <button class="action-btn" onclick="verifyBackup(6)">
+                                                    <span class="material-symbols-outlined text-sm">verified</span>
+                                                </button>
+                                                <button class="action-btn delete" onclick="deleteBackup(6)">
+                                                    <span class="material-symbols-outlined text-sm">delete</span>
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                            
+                            <!-- Pagination -->
+                            <div class="px-6 py-4 border-t border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-4">
+                                <p class="text-sm text-slate-500">Showing 1 to 6 of 156 backups</p>
+                                <div class="flex gap-2">
+                                    <button class="px-3 py-1 border border-slate-300 rounded text-sm disabled:opacity-50" disabled>Previous</button>
+                                    <button class="px-3 py-1 bg-primary text-white rounded text-sm">1</button>
+                                    <button class="px-3 py-1 border border-slate-300 rounded text-sm hover:bg-slate-50">2</button>
+                                    <button class="px-3 py-1 border border-slate-300 rounded text-sm hover:bg-slate-50">3</button>
+                                    <button class="px-3 py-1 border border-slate-300 rounded text-sm hover:bg-slate-50">4</button>
+                                    <button class="px-3 py-1 border border-slate-300 rounded text-sm hover:bg-slate-50">5</button>
+                                    <button class="px-3 py-1 border border-slate-300 rounded text-sm hover:bg-slate-50">Next</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Tab: Schedule Settings -->
+                    <div id="tab-schedule-content" class="tab-content hidden">
+                        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                            <!-- Current Schedule -->
+                            <div class="bg-white rounded-xl border border-slate-200 p-6">
+                                <h3 class="font-bold text-lg mb-4">Current Backup Schedule</h3>
+                                
+                                <div class="space-y-4">
+                                    <div class="schedule-card active p-4 rounded-lg">
+                                        <div class="flex items-center justify-between mb-2">
+                                            <span class="font-medium">Daily Full Backup</span>
+                                            <span class="status-badge status-completed">Active</span>
+                                        </div>
+                                        <p class="text-sm text-slate-600 mb-2">Every day at 03:00 AM</p>
+                                        <div class="flex items-center gap-4 text-xs text-slate-500">
+                                            <span>Type: Full System</span>
+                                            <span>Retention: 7 days</span>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="schedule-card p-4 rounded-lg">
+                                        <div class="flex items-center justify-between mb-2">
+                                            <span class="font-medium">Hourly Incremental</span>
+                                            <span class="status-badge status-in-progress">Disabled</span>
+                                        </div>
+                                        <p class="text-sm text-slate-600 mb-2">Every hour from 08:00 - 20:00</p>
+                                        <div class="flex items-center gap-4 text-xs text-slate-500">
+                                            <span>Type: Database</span>
+                                            <span>Retention: 24 hours</span>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="schedule-card p-4 rounded-lg">
+                                        <div class="flex items-center justify-between mb-2">
+                                            <span class="font-medium">Weekly Archive</span>
+                                            <span class="status-badge status-completed">Active</span>
+                                        </div>
+                                        <p class="text-sm text-slate-600 mb-2">Every Sunday at 02:00 AM</p>
+                                        <div class="flex items-center gap-4 text-xs text-slate-500">
+                                            <span>Type: Full System</span>
+                                            <span>Retention: 30 days</span>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="schedule-card p-4 rounded-lg">
+                                        <div class="flex items-center justify-between mb-2">
+                                            <span class="font-medium">Monthly Snapshot</span>
+                                            <span class="status-badge status-in-progress">Disabled</span>
+                                        </div>
+                                        <p class="text-sm text-slate-600 mb-2">First day of month at 01:00 AM</p>
+                                        <div class="flex items-center gap-4 text-xs text-slate-500">
+                                            <span>Type: Full System</span>
+                                            <span>Retention: 1 year</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <button class="w-full mt-4 px-4 py-2 border border-primary text-primary rounded-lg text-sm font-medium hover:bg-primary/5" onclick="manageSchedules()">
+                                    Manage Schedules
+                                </button>
+                            </div>
+
+                            <!-- Add New Schedule -->
+                            <div class="bg-white rounded-xl border border-slate-200 p-6">
+                                <h3 class="font-bold text-lg mb-4">Add New Schedule</h3>
+                                
+                                <form class="space-y-4">
+                                    <div>
+                                        <label class="block text-sm font-medium text-slate-700 mb-1">Schedule Name</label>
+                                        <input type="text" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm" placeholder="e.g., Daily Database Backup">
+                                    </div>
+                                    
+                                    <div class="grid grid-cols-2 gap-4">
+                                        <div>
+                                            <label class="block text-sm font-medium text-slate-700 mb-1">Backup Type</label>
+                                            <select class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm">
+                                                <option>Full System</option>
+                                                <option>Database Only</option>
+                                                <option>Files Only</option>
+                                                <option>Incremental</option>
+                                            </select>
+                                        </div>
+                                        <div>
+                                            <label class="block text-sm font-medium text-slate-700 mb-1">Frequency</label>
+                                            <select class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm">
+                                                <option>Hourly</option>
+                                                <option>Daily</option>
+                                                <option>Weekly</option>
+                                                <option>Monthly</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    
+                                    <div>
+                                        <label class="block text-sm font-medium text-slate-700 mb-1">Time</label>
+                                        <input type="time" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm" value="03:00">
+                                    </div>
+                                    
+                                    <div>
+                                        <label class="block text-sm font-medium text-slate-700 mb-1">Retention Period</label>
+                                        <select class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm">
+                                            <option>7 days</option>
+                                            <option>30 days</option>
+                                            <option>90 days</option>
+                                            <option>1 year</option>
+                                            <option>Forever</option>
+                                        </select>
+                                    </div>
+                                    
+                                    <div>
+                                        <label class="block text-sm font-medium text-slate-700 mb-1">Destination</label>
+                                        <select class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm">
+                                            <option>Local Storage</option>
+                                            <option>External Drive</option>
+                                            <option>Network Storage</option>
+                                            <option>Cloud (AWS S3)</option>
+                                        </select>
+                                    </div>
+                                    
+                                    <div class="flex items-center gap-2">
+                                        <input type="checkbox" class="text-primary rounded" id="enableSchedule" checked>
+                                        <label for="enableSchedule" class="text-sm">Enable this schedule</label>
+                                    </div>
+                                    
+                                    <button class="w-full px-4 py-2 bg-primary text-white rounded-lg text-sm font-semibold hover:bg-primary/90">
+                                        Add Schedule
+                                    </button>
+                                </form>
+                            </div>
+
+                            <!-- Retention Policy -->
+                            <div class="lg:col-span-2 bg-white rounded-xl border border-slate-200 p-6">
+                                <h3 class="font-bold text-lg mb-4">Retention Policy</h3>
+                                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                    <div class="p-4 bg-slate-50 rounded-lg">
+                                        <p class="text-sm font-medium">Daily Backups</p>
+                                        <p class="text-2xl font-bold text-primary">7 days</p>
+                                        <p class="text-xs text-slate-500">Keep last 7 daily backups</p>
+                                    </div>
+                                    <div class="p-4 bg-slate-50 rounded-lg">
+                                        <p class="text-sm font-medium">Weekly Backups</p>
+                                        <p class="text-2xl font-bold text-primary">4 weeks</p>
+                                        <p class="text-xs text-slate-500">Keep last 4 weekly backups</p>
+                                    </div>
+                                    <div class="p-4 bg-slate-50 rounded-lg">
+                                        <p class="text-sm font-medium">Monthly Backups</p>
+                                        <p class="text-2xl font-bold text-primary">12 months</p>
+                                        <p class="text-xs text-slate-500">Keep monthly for 1 year</p>
+                                    </div>
+                                </div>
+                                <p class="text-xs text-slate-400 mt-4">* Backups older than retention period are automatically deleted</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Tab: Restore Points -->
+                    <div id="tab-restore-content" class="tab-content hidden">
+                        <div class="bg-white rounded-xl border border-slate-200 p-6 mb-6">
+                            <h3 class="font-bold text-lg mb-4">System Restore Points</h3>
+                            <p class="text-sm text-slate-600 mb-4">Restore points are created before major system changes or updates</p>
+                            
+                            <div class="space-y-4">
+                                <div class="flex items-center justify-between p-4 bg-slate-50 rounded-lg hover:bg-slate-100 transition-colors cursor-pointer">
+                                    <div class="flex items-center gap-4">
+                                        <div class="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center text-green-700">
+                                            <span class="material-symbols-outlined">restore</span>
+                                        </div>
+                                        <div>
+                                            <p class="font-medium">Before System Update v2.1.0</p>
+                                            <p class="text-xs text-slate-500">2024-04-14 22:00:15 • Full System • 1.2 GB</p>
+                                        </div>
+                                    </div>
+                                    <button class="px-4 py-2 bg-primary text-white rounded-lg text-sm font-medium" onclick="restoreFromPoint(1)">
+                                        Restore
+                                    </button>
+                                </div>
+                                
+                                <div class="flex items-center justify-between p-4 bg-slate-50 rounded-lg hover:bg-slate-100 transition-colors cursor-pointer">
+                                    <div class="flex items-center gap-4">
+                                        <div class="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center text-green-700">
+                                            <span class="material-symbols-outlined">restore</span>
+                                        </div>
+                                        <div>
+                                            <p class="font-medium">Before User Permission Changes</p>
+                                            <p class="text-xs text-slate-500">2024-04-10 15:30:00 • Database Only • 845 MB</p>
+                                        </div>
+                                    </div>
+                                    <button class="px-4 py-2 bg-primary text-white rounded-lg text-sm font-medium" onclick="restoreFromPoint(2)">
+                                        Restore
+                                    </button>
+                                </div>
+                                
+                                <div class="flex items-center justify-between p-4 bg-slate-50 rounded-lg hover:bg-slate-100 transition-colors cursor-pointer">
+                                    <div class="flex items-center gap-4">
+                                        <div class="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center text-green-700">
+                                            <span class="material-symbols-outlined">restore</span>
+                                        </div>
+                                        <div>
+                                            <p class="font-medium">Quarterly System Snapshot</p>
+                                            <p class="text-xs text-slate-500">2024-04-01 03:00:00 • Full System • 1.1 GB</p>
+                                        </div>
+                                    </div>
+                                    <button class="px-4 py-2 bg-primary text-white rounded-lg text-sm font-medium" onclick="restoreFromPoint(3)">
+                                        Restore
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            <button class="w-full mt-4 px-4 py-2 border border-primary text-primary rounded-lg text-sm font-medium hover:bg-primary/5" onclick="createRestorePoint()">
+                                <span class="material-symbols-outlined text-sm align-middle mr-1">add</span>
+                                Create New Restore Point
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Tab: Backup Settings -->
+                    <div id="tab-settings-content" class="tab-content hidden">
+                        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                            <!-- General Settings -->
+                            <div class="bg-white rounded-xl border border-slate-200 p-6">
+                                <h3 class="font-bold text-lg mb-4">General Settings</h3>
+                                
+                                <div class="space-y-4">
+                                    <div>
+                                        <label class="block text-sm font-medium text-slate-700 mb-1">Backup Location</label>
+                                        <select class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm">
+                                            <option>/var/backups (Local)</option>
+                                            <option>/mnt/external (External Drive)</option>
+                                            <option>//nas/backups (Network)</option>
+                                            <option>s3://baics-backups (AWS S3)</option>
+                                        </select>
+                                    </div>
+                                    
+                                    <div>
+                                        <label class="block text-sm font-medium text-slate-700 mb-1">Compression Level</label>
+                                        <select class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm">
+                                            <option>None (Fastest)</option>
+                                            <option>Normal (Balanced)</option>
+                                            <option>Maximum (Slowest)</option>
+                                        </select>
+                                    </div>
+                                    
+                                    <div>
+                                        <label class="block text-sm font-medium text-slate-700 mb-1">Encryption</label>
+                                        <select class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm">
+                                            <option>AES-256 (Recommended)</option>
+                                            <option>AES-128</option>
+                                            <option>None</option>
+                                        </select>
+                                    </div>
+                                    
+                                    <div>
+                                        <label class="block text-sm font-medium text-slate-700 mb-1">Backup Format</label>
+                                        <select class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm">
+                                            <option>SQL + Files</option>
+                                            <option>Archive (TAR.GZ)</option>
+                                            <option>Compressed (ZIP)</option>
+                                        </select>
+                                    </div>
+                                    
+                                    <div class="flex items-center justify-between">
+                                        <div>
+                                            <p class="font-medium">Email Notifications</p>
+                                            <p class="text-xs text-slate-500">Receive backup status reports</p>
+                                        </div>
+                                        <label class="relative inline-flex items-center cursor-pointer">
+                                            <input type="checkbox" class="sr-only peer" checked>
+                                            <div class="w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-primary/20 rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Advanced Settings -->
+                            <div class="bg-white rounded-xl border border-slate-200 p-6">
+                                <h3 class="font-bold text-lg mb-4">Advanced Settings</h3>
+                                
+                                <div class="space-y-4">
+                                    <div>
+                                        <label class="block text-sm font-medium text-slate-700 mb-1">Max Backup Size</label>
+                                        <input type="text" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm" value="10 GB">
+                                    </div>
+                                    
+                                    <div>
+                                        <label class="block text-sm font-medium text-slate-700 mb-1">Max Backup Age</label>
+                                        <select class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm">
+                                            <option>30 days</option>
+                                            <option>60 days</option>
+                                            <option>90 days</option>
+                                            <option>180 days</option>
+                                            <option>1 year</option>
+                                        </select>
+                                    </div>
+                                    
+                                    <div>
+                                        <label class="block text-sm font-medium text-slate-700 mb-1">Concurrent Backups</label>
+                                        <select class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm">
+                                            <option>1 (Recommended)</option>
+                                            <option>2</option>
+                                            <option>3</option>
+                                            <option>4</option>
+                                        </select>
+                                    </div>
+                                    
+                                    <div>
+                                        <label class="block text-sm font-medium text-slate-700 mb-1">Bandwidth Limit</label>
+                                        <select class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm">
+                                            <option>No Limit</option>
+                                            <option>10 Mbps</option>
+                                            <option>25 Mbps</option>
+                                            <option>50 Mbps</option>
+                                            <option>100 Mbps</option>
+                                        </select>
+                                    </div>
+                                    
+                                    <div class="pt-4 border-t border-slate-200">
+                                        <div class="flex items-center justify-between">
+                                            <div>
+                                                <p class="font-medium">Auto-cleanup</p>
+                                                <p class="text-xs text-slate-500">Automatically delete old backups</p>
+                                            </div>
+                                            <label class="relative inline-flex items-center cursor-pointer">
+                                                <input type="checkbox" class="sr-only peer" checked>
+                                                <div class="w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-primary/20 rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+                                            </label>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Save Button -->
+                            <div class="lg:col-span-2 flex justify-end">
+                                <button class="px-6 py-2 bg-primary text-white rounded-lg text-sm font-semibold hover:bg-primary/90">
+                                    Save Settings
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Restore Confirmation Modal -->
+    <div id="restoreModal" class="fixed inset-0 bg-black/50 z-50 hidden flex items-center justify-center restore-modal">
+        <div class="bg-white rounded-xl max-w-md w-full mx-4 p-6">
+            <div class="flex items-center gap-3 mb-4">
+                <div class="w-10 h-10 rounded-full bg-amber-100 flex items-center justify-center text-amber-600">
+                    <span class="material-symbols-outlined">warning</span>
+                </div>
+                <h3 class="text-lg font-bold">Confirm Restore</h3>
+            </div>
+            
+            <p class="text-sm text-slate-600 mb-4">Are you sure you want to restore from backup <span class="font-medium" id="restoreBackupName">full_backup_20250415_0300</span>?</p>
+            
+            <div class="bg-amber-50 border border-amber-200 rounded-lg p-3 mb-4">
+                <p class="text-xs text-amber-800">
+                    <span class="font-bold">Warning:</span> This will overwrite current data. Make sure you have a recent backup of any changes made after this backup point.
+                </p>
+            </div>
+            
+            <div class="flex gap-3 justify-end">
+                <button class="px-4 py-2 border border-slate-300 rounded-lg text-sm font-medium hover:bg-slate-50" onclick="closeRestoreModal()">
+                    Cancel
+                </button>
+                <button class="px-4 py-2 bg-amber-600 text-white rounded-lg text-sm font-semibold hover:bg-amber-700" onclick="confirmRestore()">
+                    Proceed with Restore
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Delete Backup Confirmation Modal -->
+    <div id="deleteBackupModal" class="fixed inset-0 bg-black/50 z-50 hidden flex items-center justify-center restore-modal">
+        <div class="bg-white rounded-xl max-w-md w-full mx-4 p-6">
+            <div class="flex items-center gap-3 mb-4">
+                <div class="w-10 h-10 rounded-full bg-red-100 flex items-center justify-center text-red-600">
+                    <span class="material-symbols-outlined">delete</span>
+                </div>
+                <h3 class="text-lg font-bold">Delete Backup</h3>
+            </div>
+            
+            <p class="text-sm text-slate-600 mb-4">Are you sure you want to delete this backup? This action cannot be undone.</p>
+            
+            <div class="flex gap-3 justify-end">
+                <button class="px-4 py-2 border border-slate-300 rounded-lg text-sm font-medium hover:bg-slate-50" onclick="closeDeleteModal()">
+                    Cancel
+                </button>
+                <button class="px-4 py-2 bg-red-600 text-white rounded-lg text-sm font-semibold hover:bg-red-700" onclick="confirmDelete()">
+                    Delete Backup
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentTab = 'backups';
+
+        function switchTab(tab) {
+            currentTab = tab;
+            
+            // Update tab buttons
+            document.querySelectorAll('.tab-button').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            document.getElementById(`tab-${tab}`).classList.add('active');
+            
+            // Show selected tab content
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.add('hidden');
+            });
+            document.getElementById(`tab-${tab}-content`).classList.remove('hidden');
+        }
+
+        function startBackupNow() {
+            if (confirm('Start a new backup now?')) {
+                alert('Backup started successfully!');
+            }
+        }
+
+        function downloadBackup(id) {
+            alert(`Downloading backup #${id}...`);
+        }
+
+        function restoreBackup(id) {
+            document.getElementById('restoreModal').classList.remove('hidden');
+        }
+
+        function verifyBackup(id) {
+            alert(`Verifying backup #${id}... This may take a few minutes.`);
+        }
+
+        function deleteBackup(id) {
+            document.getElementById('deleteBackupModal').classList.remove('hidden');
+        }
+
+        function retryBackup(id) {
+            if (confirm(`Retry failed backup #${id}?`)) {
+                alert('Backup retry started!');
+            }
+        }
+
+        function closeRestoreModal() {
+            document.getElementById('restoreModal').classList.add('hidden');
+        }
+
+        function closeDeleteModal() {
+            document.getElementById('deleteBackupModal').classList.add('hidden');
+        }
+
+        function confirmRestore() {
+            alert('Restore process started. This may take several minutes.');
+            closeRestoreModal();
+        }
+
+        function confirmDelete() {
+            alert('Backup deleted successfully!');
+            closeDeleteModal();
+        }
+
+        function manageSchedules() {
+            alert('Schedule management panel would open here');
+        }
+
+        function restoreFromPoint(id) {
+            if (confirm(`Restore from point #${id}?`)) {
+                alert('Restore process started!');
+            }
+        }
+
+        function createRestorePoint() {
+            alert('Creating new restore point...');
+        }
+
+        function viewBackupLogs() {
+            alert('Opening backup logs...');
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            switchTab('backups');
+        });
+    </script>
+    <%- include('../partials/scripts') %>
+</body>
+</html>
