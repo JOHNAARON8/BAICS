@@ -3,104 +3,79 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BAICS System - Login</title>
+    <title>BAICS - Select Role</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
     <style>
         body { font-family: 'Inter', sans-serif; }
         .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
+        .role-card {
+            transition: all 0.3s ease;
+        }
+        .role-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 25px -5px rgba(0,0,0,0.2);
+        }
     </style>
 </head>
-<body class="bg-gradient-to-br from-primary/90 to-primary/70 min-h-screen flex items-center justify-center p-4">
-    <div class="w-full max-w-md">
+<body class="bg-gradient-to-br from-slate-900 to-slate-700 min-h-screen flex items-center justify-center p-4">
+    <div class="w-full max-w-4xl">
         <!-- Logo Area -->
-        <div class="text-center mb-8">
-            <div class="inline-flex items-center justify-center w-20 h-20 bg-white rounded-2xl shadow-xl mb-4">
-                <span class="material-symbols-outlined text-4xl text-primary">analytics</span>
+        <div class="text-center mb-12">
+            <div class="inline-flex items-center justify-center w-24 h-24 bg-white rounded-3xl shadow-2xl mb-6">
+                <span class="material-symbols-outlined text-5xl text-primary">analytics</span>
             </div>
-            <h1 class="text-3xl font-black text-white">BAICS System</h1>
-            <p class="text-white/80 text-sm mt-1">Baseline Assessment & Internal Control System</p>
+            <h1 class="text-4xl font-black text-white">BAICS System</h1>
+            <p class="text-white/80 text-lg mt-2">Baseline Assessment & Internal Control System</p>
         </div>
 
-        <!-- Login Card -->
-        <div class="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl p-8">
-            <h2 class="text-2xl font-bold text-slate-900 dark:text-white mb-6">Sign In</h2>
-            
-            <% if (locals.error) { %>
-            <div class="mb-4 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg text-red-600 dark:text-red-400 text-sm flex items-center gap-2">
-                <span class="material-symbols-outlined text-sm">error</span>
-                <%= error %>
-            </div>
-            <% } %>
-
-            <form action="/login" method="POST" class="space-y-5">
-                <!-- Role Selection -->
-                <div>
-                    <label class="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">Login as</label>
-                    <div class="grid grid-cols-3 gap-3">
-                        <label class="relative">
-                            <input type="radio" name="role" value="admin" class="peer sr-only" checked>
-                            <div class="p-3 border-2 border-slate-200 dark:border-slate-700 rounded-lg text-center cursor-pointer peer-checked:border-primary peer-checked:bg-primary/5 peer-checked:text-primary transition-all">
-                                <span class="material-symbols-outlined block text-2xl mb-1">admin_panel_settings</span>
-                                <span class="text-xs font-bold">Admin</span>
-                            </div>
-                        </label>
-                        <label class="relative">
-                            <input type="radio" name="role" value="super-admin" class="peer sr-only">
-                            <div class="p-3 border-2 border-slate-200 dark:border-slate-700 rounded-lg text-center cursor-pointer peer-checked:border-primary peer-checked:bg-primary/5 peer-checked:text-primary transition-all">
-                                <span class="material-symbols-outlined block text-2xl mb-1">security</span>
-                                <span class="text-xs font-bold">Super Admin</span>
-                            </div>
-                        </label>
-                        <label class="relative">
-                            <input type="radio" name="role" value="office-head" class="peer sr-only">
-                            <div class="p-3 border-2 border-slate-200 dark:border-slate-700 rounded-lg text-center cursor-pointer peer-checked:border-primary peer-checked:bg-primary/5 peer-checked:text-primary transition-all">
-                                <span class="material-symbols-outlined block text-2xl mb-1">person</span>
-                                <span class="text-xs font-bold">Office Head</span>
-                            </div>
-                        </label>
-                    </div>
+        <!-- Role Selection Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <!-- Admin Card -->
+            <a href="/admin-login" class="role-card bg-white rounded-2xl p-8 text-center group">
+                <div class="w-20 h-20 bg-primary/10 rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:bg-primary/20 transition-all">
+                    <span class="material-symbols-outlined text-4xl text-primary">admin_panel_settings</span>
                 </div>
+                <h2 class="text-2xl font-bold text-slate-800 mb-2">Admin</h2>
+                <p class="text-slate-500 text-sm mb-4">Manage surveys, monitor responses, and oversee office heads</p>
+                <span class="inline-flex items-center text-primary font-medium text-sm">
+                    Login as Admin
+                    <span class="material-symbols-outlined text-sm ml-1">arrow_forward</span>
+                </span>
+            </a>
 
-                <!-- Username -->
-                <div>
-                    <label class="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">Username</label>
-                    <div class="relative">
-                        <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">person</span>
-                        <input type="text" name="username" required 
-                               class="w-full pl-10 pr-4 py-3 border-2 border-slate-200 dark:border-slate-700 rounded-lg focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all dark:bg-slate-800 dark:text-white"
-                               placeholder="Enter your username">
-                    </div>
+            <!-- Super Admin Card -->
+            <a href="/super-admin-login" class="role-card bg-white rounded-2xl p-8 text-center group">
+                <div class="w-20 h-20 bg-purple-100 rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:bg-purple-200 transition-all">
+                    <span class="material-symbols-outlined text-4xl text-purple-700">security</span>
                 </div>
+                <h2 class="text-2xl font-bold text-slate-800 mb-2">Super Admin</h2>
+                <p class="text-slate-500 text-sm mb-4">Full system control, user management, and system configuration</p>
+                <span class="inline-flex items-center text-purple-700 font-medium text-sm">
+                    Login as Super Admin
+                    <span class="material-symbols-outlined text-sm ml-1">arrow_forward</span>
+                </span>
+            </a>
 
-                <!-- Password -->
-                <div>
-                    <label class="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">Password</label>
-                    <div class="relative">
-                        <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">lock</span>
-                        <input type="password" name="password" required 
-                               class="w-full pl-10 pr-4 py-3 border-2 border-slate-200 dark:border-slate-700 rounded-lg focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all dark:bg-slate-800 dark:text-white"
-                               placeholder="Enter your password">
-                    </div>
+            <!-- Office Head Card -->
+            <a href="/office-head-login" class="role-card bg-white rounded-2xl p-8 text-center group">
+                <div class="w-20 h-20 bg-green-100 rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:bg-green-200 transition-all">
+                    <span class="material-symbols-outlined text-4xl text-green-700">person</span>
                 </div>
-
-                <!-- Demo Credentials Info -->
-                <div class="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg text-xs">
-                    <p class="font-bold text-blue-600 dark:text-blue-400 mb-1">Demo Credentials:</p>
-                    <p class="text-blue-600/70 dark:text-blue-400/70">Admin: admin / admin123</p>
-                    <p class="text-blue-600/70 dark:text-blue-400/70">Super Admin: superadmin / super123</p>
-                    <p class="text-blue-600/70 dark:text-blue-400/70">Office Head: officehead / head123</p>
-                </div>
-
-                <!-- Submit Button -->
-                <button type="submit" 
-                        class="w-full bg-primary hover:bg-primary/90 text-white font-bold py-3 px-4 rounded-lg transition-all shadow-lg shadow-primary/20 flex items-center justify-center gap-2">
-                    <span class="material-symbols-outlined">login</span>
-                    <span>Sign In</span>
-                </button>
-            </form>
+                <h2 class="text-2xl font-bold text-slate-800 mb-2">Office Head</h2>
+                <p class="text-slate-500 text-sm mb-4">Complete surveys, view status, and submit responses</p>
+                <span class="inline-flex items-center text-green-700 font-medium text-sm">
+                    Login as Office Head
+                    <span class="material-symbols-outlined text-sm ml-1">arrow_forward</span>
+                </span>
+            </a>
         </div>
+        
+        <!-- Footer -->
+        <p class="text-center text-white/60 text-sm mt-12">
+            © 2025 BAICS System. All rights reserved.
+        </p>
     </div>
 </body>
 </html>

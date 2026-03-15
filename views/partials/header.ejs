@@ -4,8 +4,7 @@
         <button id="menuToggle" class="lg:hidden w-10 h-10 flex items-center justify-center rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 transition-colors">
             <span class="material-symbols-outlined">menu</span>
         </button>
-        
-        <!-- Breadcrumb -->
+    
         <div class="hidden sm:flex items-center gap-1 text-sm">
             <span class="text-slate-400"><%= role === 'admin' ? 'Admin' : role === 'super-admin' ? 'Super Admin' : 'Office Head' %></span>
             <span class="material-symbols-outlined text-sm text-slate-400">chevron_right</span>
@@ -21,7 +20,7 @@
         </div>
     </div>
 
-    <!-- Mobile search - Shown on small screens -->
+    <!-- Mobile search  -->
     <div class="sm:hidden flex-1 max-w-[200px] mx-4">
         <div class="relative">
             <span class="material-symbols-outlined absolute left-2 top-1/2 -translate-y-1/2 text-slate-400 text-base">search</span>
@@ -37,7 +36,7 @@
             <span class="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full border-2 border-white dark:border-slate-900"></span>
         </button>
         
-        <!-- Compact user menu for mobile -->
+        <!-- user menu for mobile -->
         <div class="lg:hidden w-8 h-8 rounded-full bg-slate-200 dark:bg-slate-700 flex items-center justify-center text-slate-500">
             <span class="material-symbols-outlined text-sm">person</span>
         </div>
