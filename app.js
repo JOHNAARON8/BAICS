@@ -3,6 +3,7 @@ const session = require('express-session');
 const bodyParser = require('body-parser');
 const path = require('path');
 require('dotenv').config();
+const db = require('./db')
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -21,7 +22,7 @@ app.use(session({
     secret: process.env.SESSION_SECRET || 'baics-secret-key',
     resave: false,
     saveUninitialized: false,
-    cookie: { secure: false } // set to true if using https
+    cookie: { secure: false } 
 }));
 
 // ============================================================================
