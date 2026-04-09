@@ -1,7 +1,22 @@
 const express = require('express');
 const router = express.Router();
-const multer = require('multer'); // For file uploads
+const multer = require('multer'); 
 const path = require('path');
+const db = require('../db');
+
+const OfficeHeadController = require('../Controllers/officeHeadController');
+const { ensureAuth, checkRole } = require('../Middleware/auth');
+
+// Login routes
+router.get('/office-head-login', OfficeHeadController.showLogin);
+router.post('/office-head-login', OfficeHeadController.login);
+router.get('/office-head-logout', OfficeHeadController.logout);
+
+// Dashboard (protected)
+router.get('/dashboard', ensureAuth, checkRole('office-head'), (req, res) => {
+    res.render('office-head/dashboard', { user: req.session.user });
+});
+
 
 // Configure multer for file uploads (optional - install with: npm install multer)
 const storage = multer.diskStorage({
@@ -30,16 +45,6 @@ const upload = multer({
     }
 });
 
-// Office Head Dashboard
-router.get('/dashboard', (req, res) => {
-    res.render('office-head/dashboard', {
-        title: 'Office Head Dashboard',
-        pageTitle: 'Dashboard',
-        currentPage: 'dashboard',
-        user: req.session.user,
-        role: 'office-head'
-    });
-});
 
 // My Surveys
 router.get('/my-surveys', (req, res) => {

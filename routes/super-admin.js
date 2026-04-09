@@ -1,15 +1,17 @@
 const express = require('express');
 const router = express.Router();
+const db = require('../db');
+const SuperAdminController = require('../Controllers/superAdminController');
+const { ensureAuth, checkRole } = require('../Middleware/auth');
 
-// Super Admin Dashboard
-router.get('/dashboard', (req, res) => {
-    res.render('super-admin/dashboard', {
-        title: 'Super Admin Dashboard',
-        pageTitle: 'Dashboard',
-        currentPage: 'dashboard',
-        user: req.session.user,
-        role: 'super-admin'
-    });
+// Login routes
+router.get('/super-admin-login', SuperAdminController.showLogin);
+router.post('/super-admin-login', SuperAdminController.login);
+router.get('/super-admin-logout', SuperAdminController.logout);
+
+// Dashboard (protected)
+router.get('/dashboard', ensureAuth, checkRole('super-admin'), (req, res) => {
+    res.render('super-admin/dashboard', { user: req.session.user });
 });
 
 // User Management

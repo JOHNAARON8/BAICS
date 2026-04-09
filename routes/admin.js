@@ -1,16 +1,19 @@
 const express = require('express');
 const router = express.Router();
+const db = require('../db');
+const AdminController = require('../Controllers/adminController');
+const { ensureAuth, checkRole } = require('../Middleware/auth');
+
+// Login routes
+router.get('/admin-login', AdminController.showLogin);
+router.post('/admin-login', AdminController.login);
+router.get('/admin-logout', AdminController.logout);
 
 // Admin Dashboard
-router.get('/dashboard', (req, res) => {
-    res.render('admin/dashboard', {
-        title: 'Admin Dashboard',
-        pageTitle: 'Dashboard',
-        currentPage: 'dashboard',
-        user: req.session.user,
-        role: 'admin'
-    });
+router.get('/dashboard', ensureAuth, checkRole('admin'), (req, res) => {
+    res.render('admin/dashboard', { user: req.session.user });
 });
+
 
 // Survey Management
 router.get('/survey-management', (req, res) => {

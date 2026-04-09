@@ -142,15 +142,15 @@
             </div>
             <!-- Role-based logout links -->
             <% if (role === 'admin') { %>
-                <a href="/admin-logout" class="p-1 hover:bg-slate-100 dark:hover:bg-slate-800 rounded" title="Logout">
+                <a href="/admin/admin-logout" class="p-1 hover:bg-slate-100 dark:hover:bg-slate-800 rounded" title="Logout">
                     <span class="material-symbols-outlined text-sm">logout</span>
                 </a>
             <% } else if (role === 'super-admin') { %>
-                <a href="/super-admin-logout" class="p-1 hover:bg-slate-100 dark:hover:bg-slate-800 rounded" title="Logout">
+                <a href="/super-admin/super-admin-logout" class="p-1 hover:bg-slate-100 dark:hover:bg-slate-800 rounded" title="Logout">
                     <span class="material-symbols-outlined text-sm">logout</span>
                 </a>
             <% } else if (role === 'office-head') { %>
-                <a href="/office-head-logout" class="p-1 hover:bg-slate-100 dark:hover:bg-slate-800 rounded" title="Logout">
+                <a href="/office-head/office-head-logout" class="p-1 hover:bg-slate-100 dark:hover:bg-slate-800 rounded" title="Logout">
                     <span class="material-symbols-outlined text-sm">logout</span>
                 </a>
             <% } %>
